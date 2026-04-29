@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+
+{% block title %}Upload{% endblock %}
+
+{% block header_nav %}
+<a class="item" href="/books">All books</a>
+<a class="item" href="/authors">Authors</a>
+<a class="item -current" href="/upload">Upload</a>
+<form class="form" method="post" action="/signout">
+  <button class="item item-button" type="submit">Sign out</button>
+</form>
+{% endblock %}
+
+{% block content %}
+<section class="upload-page">
+  <div class="surface-panel form-panel">
+    <div class="page-intro">
+      <p class="kicker">EPUB ingestion</p>
+      <h1 class="title">Upload a book</h1>
+      <p class="body">
+        Upload an EPUB with embedded title, author, and identifier metadata. Duplicate identifiers are rejected.
+      </p>
+    </div>
+
+    {% if let Some(message) = error %}
+    <p class="message-box -error">{{ message }}</p>
+    {% endif %}
+
+    <form class="form-stack" method="post" action="/upload" enctype="multipart/form-data">
+      <label class="form-field" for="epub">
+        <span class="label">EPUB file</span>
+        <input class="input -file" id="epub" name="epub" type="file" accept=".epub,application/epub+zip" required>
+      </label>
+
+      <button class="action-button" type="submit">Upload EPUB</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

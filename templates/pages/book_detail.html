@@ -1,0 +1,102 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ publication.title }}{% endblock %}
+
+{% block header_nav %}
+<a class="item -current" href="/books">All books</a>
+<a class="item" href="/authors">Authors</a>
+<a class="item" href="/upload">Upload</a>
+<form class="form" method="post" action="/signout">
+  <button class="item item-button" type="submit">Sign out</button>
+</form>
+{% endblock %}
+
+{% block content %}
+<section class="detail-page">
+  <a class="back-link" href="/books">Back to all books</a>
+
+  <article class="surface-panel detail-card">
+    <div class="media">
+      {% match publication.cover_image_path %}
+      {% when Some with (cover_image_path) %}
+      <img class="cover" src="/books/{{ publication.id }}/cover" alt="Cover for {{ publication.title }}">
+      {% when None %}
+      <div class="cover -fallback" aria-hidden="true">
+        <span class="initial">{{ publication.title_initial }}</span>
+      </div>
+      {% endmatch %}
+    </div>
+
+    <div class="content">
+      <div class="page-intro">
+        <p class="kicker">Book detail</p>
+        <h1 class="title">{{ publication.title }}</h1>
+      </div>
+
+      <dl class="meta-list">
+        <div class="row">
+          <dt class="term">Contributors</dt>
+          <dd class="description">
+            {% if publication.contributors.len() == 0 %}
+            No contributors listed
+            {% else %}
+            {% for contributor in publication.contributors %}
+            {{ contributor.name }}{{ contributor.role_suffix() }}{% if !loop.last %}, {% endif %}
+            {% endfor %}
+            {% endif %}
+          </dd>
+        </div>
+        <div class="row">
+          <dt class="term">Identifier</dt>
+          <dd class="description">{{ publication.source_identifier }}</dd>
+        </div>
+        {% if let Some(original_filename) = publication.original_filename %}
+        <div class="row">
+          <dt class="term">Uploaded file</dt>
+          <dd class="description">{{ original_filename }}</dd>
+        </div>
+        {% endif %}
+      </dl>
+
+      <section class="sync-panel" aria-labelledby="sync-status-title">
+        <div class="heading">
+          <h2 class="title" id="sync-status-title">Sync status</h2>
+          {% if sync_status.synced %}
+          <span class="badge -synced">Synced</span>
+          {% else %}
+          <span class="badge">Not synced</span>
+          {% endif %}
+        </div>
+
+        {% if sync_status.synced %}
+        <dl class="meta-list -compact">
+          <div class="row">
+            <dt class="term">Progress</dt>
+            <dd class="description">{{ sync_status.percentage }} · {{ sync_status.progress }}</dd>
+          </div>
+          <div class="row">
+            <dt class="term">Device</dt>
+            <dd class="description">{{ sync_status.device }}</dd>
+          </div>
+          <div class="row">
+            <dt class="term">Last synced</dt>
+            <dd class="description">{{ sync_status.updated_at }}</dd>
+          </div>
+        </dl>
+        {% else %}
+        <p class="body">No KOReader progress has been synced for this book yet.</p>
+        {% endif %}
+      </section>
+
+      <div class="actions-row">
+        {% if let Some(epub_path) = publication.epub_path %}
+        <a class="action-button" href="/books/{{ publication.id }}/download">Download EPUB</a>
+        {% endif %}
+        <form method="post" action="/books/{{ publication.id }}/delete">
+          <button class="action-button -danger -compact" type="submit">Delete book</button>
+        </form>
+      </div>
+    </div>
+  </article>
+</section>
+{% endblock %}

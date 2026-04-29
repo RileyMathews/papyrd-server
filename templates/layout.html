@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Papyrd{% endblock %}</title>
+    <link rel="stylesheet" href="/static/app.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="site-header">
+        <a class="brand" href="/">Papyrd</a>
+        <nav class="nav-list">
+          {% block header_nav %}
+          <a class="item" href="/signin">Sign in</a>
+          <a class="item" href="/signup">Sign up</a>
+          {% endblock %}
+        </nav>
+      </header>
+
+      <main class="page-area">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </body>
+</html>

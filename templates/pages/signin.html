@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% block title %}Sign In | Papyrd{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+  <div class="surface-panel form-panel">
+    <div class="page-intro">
+      <p class="kicker">Shared library</p>
+      <h1 class="title">Sign in to Papyrd</h1>
+      <p class="body">
+        Use the username you signed up with to access the shared catalog.
+      </p>
+    </div>
+
+    {% if let Some(message) = error %}
+    <p class="message-box -error">{{ message }}</p>
+    {% endif %}
+
+    <form class="form-stack" method="post" action="/signin">
+      <label class="form-field">
+        <span class="label">Username</span>
+        <input class="input" type="text" name="username" value="{{ username }}" autocomplete="username" required>
+      </label>
+
+      <label class="form-field">
+        <span class="label">Password</span>
+        <input class="input" type="password" name="password" autocomplete="current-password" required>
+      </label>
+
+      <button class="action-button" type="submit">Sign in</button>
+    </form>
+
+    <p class="support-copy">
+      Need an account?
+      <a href="/signup">Create one</a>
+    </p>
+  </div>
+</section>
+{% endblock %}

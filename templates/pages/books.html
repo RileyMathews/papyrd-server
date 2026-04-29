@@ -1,0 +1,62 @@
+{% extends "layout.html" %}
+
+{% block title %}All Books{% endblock %}
+
+{% block header_nav %}
+<a class="item -current" href="/books">All books</a>
+<a class="item" href="/authors">Authors</a>
+<a class="item" href="/upload">Upload</a>
+<form class="form" method="post" action="/signout">
+  <button class="item item-button" type="submit">Sign out</button>
+</form>
+{% endblock %}
+
+{% block content %}
+<section class="catalog-page">
+  <div class="catalog-bar">
+    <div class="page-intro">
+      <p class="kicker">Shared catalog</p>
+      <h1 class="title">All books</h1>
+      <p class="body">
+        Browse the shared library or add a new EPUB to the catalog.
+      </p>
+    </div>
+    <a class="action-button" href="/upload">Upload a book</a>
+  </div>
+
+  {% if publications.len() == 0 %}
+  <section class="surface-panel empty-panel">
+    <div class="page-intro">
+      <p class="kicker">Nothing here yet</p>
+      <h2 class="title">Your catalog is empty.</h2>
+      <p class="body">
+        Upload the first EPUB to create the shared library.
+      </p>
+    </div>
+  </section>
+  {% else %}
+  <section class="book-grid">
+    {% for publication in publications %}
+    <article class="book-card">
+        <a class="link" href="/books/{{ publication.id }}">
+          {% match publication.cover_image_path %}
+          {% when Some with (cover_image_path) %}
+        <img class="cover" src="/books/{{ publication.id }}/cover" alt="Cover for {{ publication.title }}">
+          {% when None %}
+          <div class="cover -fallback" aria-hidden="true">
+            <span class="initial">{{ publication.title_initial }}</span>
+        </div>
+        {% endmatch %}
+
+        <div class="text">
+          <h2 class="title">{{ publication.title }}</h2>
+          <p class="author">{{ publication.contributors }}</p>
+          <p class="meta">{{ publication.source_identifier }}</p>
+        </div>
+      </a>
+    </article>
+    {% endfor %}
+  </section>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ author_name }}{% endblock %}
+
+{% block header_nav %}
+<a class="item" href="/books">All books</a>
+<a class="item -current" href="/authors">Authors</a>
+<a class="item" href="/upload">Upload</a>
+<form class="form" method="post" action="/signout">
+  <button class="item item-button" type="submit">Sign out</button>
+</form>
+{% endblock %}
+
+{% block content %}
+<section class="detail-page">
+  <a class="back-link" href="/authors">Back to authors</a>
+
+  <section class="catalog-page">
+    <div class="author-hero surface-panel">
+      <div class="page-intro">
+        <p class="kicker">Author</p>
+        <h1 class="title">{{ author_name }}</h1>
+        <p class="body">
+          {{ publications.len() }} {% if publications.len() == 1 %}book{% else %}books{% endif %} in the shared catalog.
+        </p>
+      </div>
+    </div>
+
+    {% if publications.len() == 0 %}
+    <section class="surface-panel empty-panel">
+      <div class="page-intro">
+        <p class="kicker">Nothing here yet</p>
+        <h2 class="title">No books are available for this author.</h2>
+      </div>
+    </section>
+    {% else %}
+    <section class="book-grid">
+      {% for publication in publications %}
+      <article class="book-card">
+        <a class="link" href="/books/{{ publication.id }}">
+          {% match publication.cover_image_path %}
+          {% when Some with (cover_image_path) %}
+          <img class="cover" src="/books/{{ publication.id }}/cover" alt="Cover for {{ publication.title }}">
+          {% when None %}
+          <div class="cover -fallback" aria-hidden="true">
+            <span class="initial">{{ publication.title_initial }}</span>
+          </div>
+          {% endmatch %}
+
+          <div class="text">
+            <h2 class="title">{{ publication.title }}</h2>
+            <p class="author">{{ publication.contributors }}</p>
+            <p class="meta">{{ publication.source_identifier }}</p>
+          </div>
+        </a>
+      </article>
+      {% endfor %}
+    </section>
+    {% endif %}
+  </section>
+</section>
+{% endblock %}

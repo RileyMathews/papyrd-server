@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block title %}Authors{% endblock %}
+
+{% block header_nav %}
+<a class="item" href="/books">All books</a>
+<a class="item -current" href="/authors">Authors</a>
+<a class="item" href="/upload">Upload</a>
+<form class="form" method="post" action="/signout">
+  <button class="item item-button" type="submit">Sign out</button>
+</form>
+{% endblock %}
+
+{% block content %}
+<section class="catalog-page">
+  <div class="catalog-bar">
+    <div class="page-intro">
+      <p class="kicker">Contributors</p>
+      <h1 class="title">Authors</h1>
+      <p class="body">
+        Browse the shared catalog by author and jump straight to each writer's books.
+      </p>
+    </div>
+  </div>
+
+  {% if authors.len() == 0 %}
+  <section class="surface-panel empty-panel">
+    <div class="page-intro">
+      <p class="kicker">Nothing here yet</p>
+      <h2 class="title">No authors are available.</h2>
+      <p class="body">
+        Upload the first EPUB with author metadata to start browsing by author.
+      </p>
+    </div>
+  </section>
+  {% else %}
+  <section class="author-list surface-panel">
+    {% for author in authors %}
+    <a class="author-link" href="/authors/{{ author.key|urlencode }}">
+      <span class="name">{{ author.name }}</span>
+      <span class="count">{{ author.publication_count }} {% if author.publication_count == 1 %}book{% else %}books{% endif %}</span>
+    </a>
+    {% endfor %}
+  </section>
+  {% endif %}
+</section>
+{% endblock %}
