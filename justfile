@@ -1,5 +1,3 @@
-registry := "registry.rileymathews.com/rileymathews/papyrd"
-
-deploy version:
-    docker build -t {{registry}}:{{version}} .
-    docker push {{registry}}:{{version}}
+release tag:
+    git tag "{{tag}}" HEAD
+    git push origin "refs/tags/{{tag}}"
