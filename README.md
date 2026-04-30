@@ -51,4 +51,9 @@ volumes:
   papyrd-storage:
   papyrd-postgres:
 ```
+# OPDS
+The OPDS entrypoint for your server will be at the `/opds` path. So for example if your server is live at
+`https://papyrd.mydomain.com` then you should use `https://papyrd.mydomain.com/opds` in your client configurations.
 
+# Kosync
+To use the kosync server for progress syncing you should just configure kosync with the root domain of your server. i.e. `https://papyrd.mydomain.com`
