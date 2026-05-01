@@ -12,7 +12,7 @@ use tower_http::{
 
 use crate::{handlers, state::AppState};
 
-const UPLOAD_BODY_LIMIT_BYTES: usize = 64 * 1024 * 1024;
+const UPLOAD_BODY_LIMIT_BYTES: usize = 512 * 1024 * 1024;
 
 pub fn app(state: AppState) -> Router {
     Router::new()

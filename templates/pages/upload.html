@@ -16,9 +16,10 @@
   <div class="surface-panel form-panel">
     <div class="page-intro">
       <p class="kicker">EPUB ingestion</p>
-      <h1 class="title">Upload a book</h1>
+      <h1 class="title">Upload books</h1>
       <p class="body">
-        Upload an EPUB with embedded title, author, and identifier metadata. Duplicate identifiers are rejected.
+        Upload one or more EPUB files with embedded title, author, and identifier metadata. Duplicate identifiers are
+        skipped.
       </p>
     </div>
 
@@ -27,13 +28,38 @@
     {% endif %}
 
     <form class="form-stack" method="post" action="/upload" enctype="multipart/form-data">
-      <label class="form-field" for="epub">
-        <span class="label">EPUB file</span>
-        <input class="input -file" id="epub" name="epub" type="file" accept=".epub,application/epub+zip" required>
+      <label class="form-field" for="epubs">
+        <span class="label">EPUB files</span>
+        <input class="input -file" id="epubs" name="epubs" type="file" accept=".epub,application/epub+zip" multiple>
       </label>
 
-      <button class="action-button" type="submit">Upload EPUB</button>
+      <button class="action-button" type="submit">Upload EPUBs</button>
     </form>
+
+    {% if let Some(summary) = summary %}
+    <section class="upload-results" aria-live="polite">
+      <div class="upload-summary">
+        <span><strong>{{ summary.uploaded_count }}</strong> uploaded</span>
+        <span><strong>{{ summary.duplicate_count }}</strong> duplicates</span>
+        <span><strong>{{ summary.failed_count }}</strong> failed</span>
+      </div>
+
+      <div class="upload-result-list">
+        {% for result in results %}
+        <article class="upload-result -{{ result.status_class }}">
+          <div class="upload-result-header">
+            <span class="status">{{ result.status_label }}</span>
+            <strong class="filename">{{ result.filename }}</strong>
+          </div>
+          {% if let Some(title) = result.title %}
+          <p class="result-title">{{ title }}</p>
+          {% endif %}
+          <p class="result-message">{{ result.message }}</p>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
   </div>
 </section>
 {% endblock %}
