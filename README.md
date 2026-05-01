@@ -25,9 +25,25 @@ services:
       DATABASE_URL: postgres://papyrd:change-me@postgres:5432/papyrd
       PAPYRD_SESSION_SECRET: change-this-to-a-long-random-string
       PAPYRD_BIND_ADDRESS: 0.0.0.0:3000
-      PAPYRD_STORAGE_ROOT: /app/storage
+      PAPYRD_STORAGE_ROOT: /app/storage # THIS MUST MATCH INGEST STORAGE ROOT IF USING INGEST SERVICE
     volumes:
       - papyrd-storage:/app/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  papyrd-ingest: # OPTIONAL only use if you want to use the ingest directory
+    image: ghcr.io/rileymathews/papyrd-server:latest
+    restart: unless-stopped
+    command: ["/app/ingest"]
+    environment:
+      DATABASE_URL: postgres://papyrd:change-me@postgres:5432/papyrd
+      PAPYRD_SESSION_SECRET: change-this-to-a-long-random-string
+      PAPYRD_STORAGE_ROOT: /app/storage # MAKE SURE THIS MATCHES THE STORAGE ROOT OF YOUR APP SERVICE
+      PAPYRD_INGEST_ROOT: /app/ingest
+    volumes:
+      - papyrd-storage:/app/storage
+      - papyrd-ingest:/app/ingest
     depends_on:
       postgres:
         condition: service_healthy
@@ -49,8 +65,13 @@ services:
 
 volumes:
   papyrd-storage:
+  papyrd-ingest:
   papyrd-postgres:
 ```
+
+The ingest container here is completely optional. If running you can drop epub files into the ingest directory via whichever method you have available to you (cp, rsync, scp etc...) and the ingest container will
+process the files and add the required metadata to the database before copying the file over to the primary storage directory.
+
 # OPDS
 The OPDS entrypoint for your server will be at the `/opds` path. So for example if your server is live at
 `https://papyrd.mydomain.com` then you should use `https://papyrd.mydomain.com/opds` in your client configurations.

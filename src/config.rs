@@ -8,6 +8,7 @@ pub struct Config {
     pub bind_address: SocketAddr,
     pub database_url: String,
     pub storage_root: PathBuf,
+    pub ingest_root: PathBuf,
     pub session_key: Key,
 }
 
@@ -22,6 +23,9 @@ impl Config {
         let storage_root = env::var("PAPYRD_STORAGE_ROOT")
             .map(PathBuf::from)
             .unwrap_or_else(|_| PathBuf::from("storage"));
+        let ingest_root = env::var("PAPYRD_INGEST_ROOT")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| storage_root.join("ingest"));
         let session_secret =
             env::var("PAPYRD_SESSION_SECRET").map_err(|_| ConfigError::MissingSessionSecret)?;
         let session_key = Key::from(&derive_session_key(&session_secret));
@@ -30,6 +34,7 @@ impl Config {
             bind_address,
             database_url,
             storage_root,
+            ingest_root,
             session_key,
         })
     }

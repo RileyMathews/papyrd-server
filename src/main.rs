@@ -1,17 +1,5 @@
-mod auth;
-mod config;
-mod domain;
-mod epub;
-mod error;
-mod handlers;
-mod kosync_hash;
-mod repositories;
-mod state;
-mod web;
-
+use papyrd::{config::Config, state, web};
 use tracing::info;
-
-use crate::config::Config;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
