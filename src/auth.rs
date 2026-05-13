@@ -3,7 +3,7 @@ use argon2::{
     password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString, rand_core::OsRng},
 };
 use axum::http::HeaderValue;
-use axum_extra::extract::cookie::{Cookie, PrivateCookieJar};
+use axum_extra::extract::cookie::{Cookie, PrivateCookieJar, SameSite};
 use base64::{Engine as _, engine::general_purpose::STANDARD};
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -55,7 +55,8 @@ pub fn sign_in_jar(jar: PrivateCookieJar, user_id: Uuid) -> PrivateCookieJar {
     jar.add(
         Cookie::build((SESSION_COOKIE_NAME, user_id.to_string()))
             .path("/")
-            .http_only(true),
+            .http_only(true)
+            .same_site(SameSite::Strict),
     )
 }
 
