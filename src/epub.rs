@@ -310,10 +310,12 @@ fn parse_package_document<R: Read + std::io::Seek>(
             let image_bytes = read_zip_binary_entry(archive, &asset_path).ok();
 
             image_bytes.and_then(|bytes| {
-                cover_extension(&media_type, &href).map(|file_extension| ParsedCoverImage {
-                    file_extension,
-                    media_type,
-                    bytes,
+                cover_metadata(&media_type, &bytes).map(|(file_extension, media_type)| {
+                    ParsedCoverImage {
+                        file_extension: file_extension.to_owned(),
+                        media_type: media_type.to_owned(),
+                        bytes,
+                    }
                 })
             })
         }
@@ -440,16 +442,37 @@ fn resolve_archive_path(package_path: &str, href: &str) -> String {
     normalized.to_string_lossy().replace('\\', "/")
 }
 
-fn cover_extension(media_type: &str, href: &str) -> Option<String> {
+fn cover_metadata(media_type: &str, bytes: &[u8]) -> Option<(&'static str, &'static str)> {
+    let media_type = media_type.trim();
+
     match media_type {
-        "image/jpeg" => Some("jpg".to_owned()),
-        "image/png" => Some("png".to_owned()),
-        "image/gif" => Some("gif".to_owned()),
-        "image/webp" => Some("webp".to_owned()),
-        _ => Path::new(href)
-            .extension()
-            .and_then(|extension| extension.to_str())
-            .map(|extension| extension.to_ascii_lowercase()),
+        value
+            if value.eq_ignore_ascii_case("image/jpeg")
+                && bytes.starts_with(&[0xff, 0xd8, 0xff]) =>
+        {
+            Some(("jpg", "image/jpeg"))
+        }
+        value
+            if value.eq_ignore_ascii_case("image/png")
+                && bytes.starts_with(b"\x89PNG\r\n\x1a\n") =>
+        {
+            Some(("png", "image/png"))
+        }
+        value
+            if value.eq_ignore_ascii_case("image/gif")
+                && (bytes.starts_with(b"GIF87a") || bytes.starts_with(b"GIF89a")) =>
+        {
+            Some(("gif", "image/gif"))
+        }
+        value
+            if value.eq_ignore_ascii_case("image/webp")
+                && bytes.len() >= 12
+                && bytes.starts_with(b"RIFF")
+                && &bytes[8..12] == b"WEBP" =>
+        {
+            Some(("webp", "image/webp"))
+        }
+        _ => None,
     }
 }
 
@@ -544,7 +567,78 @@ mod tests {
         );
     }
 
+    #[test]
+    fn parses_cover_when_media_type_and_bytes_are_supported() {
+        let cover_bytes = b"\x89PNG\r\n\x1a\nminimal-png-probe";
+        let epub_bytes = build_epub_with_entries(
+            r##"<?xml version='1.0' encoding='UTF-8'?>
+<package xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://www.idpf.org/2007/opf" version="3.0">
+  <metadata>
+    <dc:identifier>urn:test:valid-cover</dc:identifier>
+    <dc:title>Valid Cover</dc:title>
+  </metadata>
+  <manifest>
+    <item id="cover" href="cover.png" media-type="image/png" properties="cover-image"/>
+  </manifest>
+</package>"##,
+            &[("OEBPS/cover.png", cover_bytes)],
+        );
+
+        let parsed = parse_metadata(&epub_bytes).expect("expected EPUB metadata to parse");
+        let cover = parsed.cover_image.expect("expected cover to parse");
+
+        assert_eq!(cover.file_extension, "png");
+        assert_eq!(cover.media_type, "image/png");
+        assert_eq!(cover.bytes, cover_bytes);
+    }
+
+    #[test]
+    fn ignores_cover_when_media_type_is_not_safe_image() {
+        let epub_bytes = build_epub_with_entries(
+            r##"<?xml version='1.0' encoding='UTF-8'?>
+<package xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://www.idpf.org/2007/opf" version="3.0">
+  <metadata>
+    <dc:identifier>urn:test:html-cover</dc:identifier>
+    <dc:title>HTML Cover</dc:title>
+  </metadata>
+  <manifest>
+    <item id="cover" href="cover.html" media-type="text/html" properties="cover-image"/>
+  </manifest>
+</package>"##,
+            &[("OEBPS/cover.html", b"<script>alert(1)</script>")],
+        );
+
+        let parsed = parse_metadata(&epub_bytes).expect("expected EPUB metadata to parse");
+
+        assert!(parsed.cover_image.is_none());
+    }
+
+    #[test]
+    fn ignores_cover_when_declared_image_bytes_do_not_match() {
+        let epub_bytes = build_epub_with_entries(
+            r##"<?xml version='1.0' encoding='UTF-8'?>
+<package xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://www.idpf.org/2007/opf" version="3.0">
+  <metadata>
+    <dc:identifier>urn:test:mismatched-cover</dc:identifier>
+    <dc:title>Mismatched Cover</dc:title>
+  </metadata>
+  <manifest>
+    <item id="cover" href="cover.png" media-type="image/png" properties="cover-image"/>
+  </manifest>
+</package>"##,
+            &[("OEBPS/cover.png", b"<html>not a png</html>")],
+        );
+
+        let parsed = parse_metadata(&epub_bytes).expect("expected EPUB metadata to parse");
+
+        assert!(parsed.cover_image.is_none());
+    }
+
     fn build_epub(package_document: &str) -> Vec<u8> {
+        build_epub_with_entries(package_document, &[])
+    }
+
+    fn build_epub_with_entries(package_document: &str, entries: &[(&str, &[u8])]) -> Vec<u8> {
         let cursor = Cursor::new(Vec::new());
         let mut writer = zip::ZipWriter::new(cursor);
         let options = SimpleFileOptions::default();
@@ -569,6 +663,15 @@ mod tests {
         writer
             .write_all(package_document.as_bytes())
             .expect("expected package document to be written");
+
+        for (path, bytes) in entries {
+            writer
+                .start_file(path, options)
+                .expect("expected extra EPUB entry to be created");
+            writer
+                .write_all(bytes)
+                .expect("expected extra EPUB entry to be written");
+        }
 
         writer
             .finish()

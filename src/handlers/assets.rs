@@ -102,6 +102,10 @@ pub async fn cover_image(
     Response::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, content_type)
+        .header(
+            "x-content-type-options",
+            HeaderValue::from_static("nosniff"),
+        )
         .body(Body::from(bytes))
         .map_err(|error| std::io::Error::other(error.to_string()).into())
 }
