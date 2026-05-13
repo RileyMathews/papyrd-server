@@ -2,6 +2,10 @@
 Papyrd is an eBook server that implements OPDS for eBook discovery and download as well as Kosync for reading progress sync.
 Right now it is a minimal implementation that implements basic eBook uploading and the minimal work needed for Kosync and OPDS to work.
 
+<img src="screenshots/screenshot-1.png" alt="Papyrd screenshot 1" width="320">
+<img src="screenshots/screenshot-2.png" alt="Papyrd screenshot 2" width="320">
+<img src="screenshots/screenshot-3.png" alt="Papyrd screenshot 3" width="320">
+
 # Official companion app
 The goals of this server are to be as compatible as possible with open source protocols. Any compatability issues with clients
 that correctly implement OPDS and/or Kosync should work with this server and any compatability issues will be investigated as a bug.
