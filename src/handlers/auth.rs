@@ -84,7 +84,7 @@ pub async fn signup(
         }
         Err(error) => return Err(error.into()),
     };
-    let jar = auth::sign_in_jar(jar, created.user.id);
+    let jar = auth::sign_in_jar(jar, created.user.id, state.session_cookie_secure());
 
     Ok((jar, Redirect::to("/")).into_response())
 }
@@ -125,12 +125,12 @@ pub async fn signin(
         return render_signin(username, Some("Invalid username or password."));
     }
 
-    let jar = auth::sign_in_jar(jar, stored_user.user.id);
+    let jar = auth::sign_in_jar(jar, stored_user.user.id, state.session_cookie_secure());
     Ok((jar, Redirect::to("/")).into_response())
 }
 
-pub async fn signout(jar: PrivateCookieJar) -> impl IntoResponse {
-    let jar = auth::sign_out_jar(jar);
+pub async fn signout(State(state): State<AppState>, jar: PrivateCookieJar) -> impl IntoResponse {
+    let jar = auth::sign_out_jar(jar, state.session_cookie_secure());
     (jar, Redirect::to("/signin"))
 }
 

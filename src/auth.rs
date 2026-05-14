@@ -51,17 +51,24 @@ pub fn verify_kosync_userkey(userkey: &str, userkey_hash: &str) -> Result<bool, 
     verify_password(userkey, userkey_hash)
 }
 
-pub fn sign_in_jar(jar: PrivateCookieJar, user_id: Uuid) -> PrivateCookieJar {
+pub fn sign_in_jar(jar: PrivateCookieJar, user_id: Uuid, secure: bool) -> PrivateCookieJar {
     jar.add(
         Cookie::build((SESSION_COOKIE_NAME, user_id.to_string()))
             .path("/")
             .http_only(true)
-            .same_site(SameSite::Strict),
+            .same_site(SameSite::Strict)
+            .secure(secure),
     )
 }
 
-pub fn sign_out_jar(jar: PrivateCookieJar) -> PrivateCookieJar {
-    jar.remove(Cookie::build((SESSION_COOKIE_NAME, "")).path("/"))
+pub fn sign_out_jar(jar: PrivateCookieJar, secure: bool) -> PrivateCookieJar {
+    jar.remove(
+        Cookie::build((SESSION_COOKIE_NAME, ""))
+            .path("/")
+            .http_only(true)
+            .same_site(SameSite::Strict)
+            .secure(secure),
+    )
 }
 
 pub async fn current_user(db: &PgPool, jar: &PrivateCookieJar) -> Result<Option<User>, AppError> {

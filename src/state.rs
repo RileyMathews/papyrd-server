@@ -49,6 +49,10 @@ impl AppState {
         self.inner.config.session_key.clone()
     }
 
+    pub fn session_cookie_secure(&self) -> bool {
+        self.inner.config.session_cookie_secure
+    }
+
     pub fn media_root(&self) -> &Path {
         self.inner.media_root.as_path()
     }

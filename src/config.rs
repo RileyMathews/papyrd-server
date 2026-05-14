@@ -10,7 +10,11 @@ pub struct Config {
     pub storage_root: PathBuf,
     pub ingest_root: PathBuf,
     pub session_key: Key,
+    pub session_cookie_secure: bool,
 }
+
+const LOCAL_DEV_ENV_VAR: &str = "PAPYRD_LOCAL_DEV";
+const LOCAL_DEV_UNSAFE_VALUE: &str = "enable-unsafe-development-environment";
 
 impl Config {
     pub fn from_env() -> Result<Self, ConfigError> {
@@ -29,6 +33,8 @@ impl Config {
         let session_secret =
             env::var("PAPYRD_SESSION_SECRET").map_err(|_| ConfigError::MissingSessionSecret)?;
         let session_key = Key::from(&derive_session_key(&session_secret));
+        let session_cookie_secure =
+            secure_session_cookie_from_local_dev_env(env::var(LOCAL_DEV_ENV_VAR).ok().as_deref());
 
         Ok(Self {
             bind_address,
@@ -36,6 +42,7 @@ impl Config {
             storage_root,
             ingest_root,
             session_key,
+            session_cookie_secure,
         })
     }
 }
@@ -59,4 +66,33 @@ fn derive_session_key(secret: &str) -> [u8; 64] {
     let mut key = [0_u8; 64];
     key.copy_from_slice(&digest);
     key
+}
+
+fn secure_session_cookie_from_local_dev_env(local_dev_value: Option<&str>) -> bool {
+    local_dev_value != Some(LOCAL_DEV_UNSAFE_VALUE)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::secure_session_cookie_from_local_dev_env;
+
+    #[test]
+    fn session_cookie_is_secure_by_default() {
+        assert!(secure_session_cookie_from_local_dev_env(None));
+    }
+
+    #[test]
+    fn session_cookie_stays_secure_for_non_matching_local_dev_value() {
+        assert!(secure_session_cookie_from_local_dev_env(Some("true")));
+        assert!(secure_session_cookie_from_local_dev_env(Some(
+            "enable-unsafe-development-environment "
+        )));
+    }
+
+    #[test]
+    fn session_cookie_secure_can_be_disabled_for_explicit_local_dev_value() {
+        assert!(!secure_session_cookie_from_local_dev_env(Some(
+            "enable-unsafe-development-environment"
+        )));
+    }
 }
