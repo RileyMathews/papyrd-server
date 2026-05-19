@@ -22,6 +22,7 @@ pub struct AuthForm {
 struct SignupTemplate<'a> {
     username: &'a str,
     error: Option<&'a str>,
+    signup_closed: bool,
 }
 
 #[derive(Template)]
@@ -39,11 +40,19 @@ pub async fn signup_form(
         return Ok(Redirect::to("/").into_response());
     }
 
-    if signup_is_closed(&state).await? {
-        return Ok(signup_closed_response());
+    let signup_closed = signup_is_closed(&state).await?;
+    let html = SignupTemplate {
+        username: "",
+        error: None,
+        signup_closed,
+    }
+    .render()?;
+
+    if signup_closed {
+        return Ok((StatusCode::FORBIDDEN, Html(html)).into_response());
     }
 
-    render_signup("", None)
+    Ok(Html(html).into_response())
 }
 
 pub async fn signup(
@@ -56,24 +65,48 @@ pub async fn signup(
     }
 
     if signup_is_closed(&state).await? {
-        return Ok(signup_closed_response());
+        let html = SignupTemplate {
+            username: "",
+            error: None,
+            signup_closed: true,
+        }
+        .render()?;
+        return Ok((StatusCode::FORBIDDEN, Html(html)).into_response());
     }
 
     let username = form.username.trim();
     let password = form.password.trim();
     let Some(normalized_username) = auth::normalize_username(username) else {
-        return render_signup(username, Some("Username is required."));
+        let html = SignupTemplate {
+            username,
+            error: Some("Username is required."),
+            signup_closed: false,
+        }
+        .render()?;
+        return Ok(Html(html).into_response());
     };
 
     if password.is_empty() {
-        return render_signup(username, Some("Password is required."));
+        let html = SignupTemplate {
+            username,
+            error: Some("Password is required."),
+            signup_closed: false,
+        }
+        .render()?;
+        return Ok(Html(html).into_response());
     }
 
     if users::find_user_by_normalized_username(state.db(), &normalized_username)
         .await?
         .is_some()
     {
-        return render_signup(username, Some("That username is already taken."));
+        let html = SignupTemplate {
+            username,
+            error: Some("That username is already taken."),
+            signup_closed: false,
+        }
+        .render()?;
+        return Ok(Html(html).into_response());
     }
 
     let password_hash = auth::hash_password(password)?;
@@ -89,7 +122,13 @@ pub async fn signup(
     {
         Ok(created) => created,
         Err(error) if is_unique_violation(&error) => {
-            return render_signup(username, Some("That username is already taken."));
+            let html = SignupTemplate {
+                username,
+                error: Some("That username is already taken."),
+                signup_closed: false,
+            }
+            .render()?;
+            return Ok(Html(html).into_response());
         }
         Err(error) => return Err(error.into()),
     };
@@ -147,18 +186,9 @@ async fn signup_is_closed(state: &AppState) -> Result<bool, AppError> {
     Ok(state.disable_signup_after_first_user() && users::has_any_users(state.db()).await?)
 }
 
-fn render_signup(username: &str, error: Option<&str>) -> Result<Response, AppError> {
-    let html = SignupTemplate { username, error }.render()?;
-    Ok(Html(html).into_response())
-}
-
 fn render_signin(username: &str, error: Option<&str>) -> Result<Response, AppError> {
     let html = SigninTemplate { username, error }.render()?;
     Ok(Html(html).into_response())
-}
-
-fn signup_closed_response() -> Response {
-    (StatusCode::FORBIDDEN, "Signups are closed.").into_response()
 }
 
 fn is_unique_violation(error: &SqlxError) -> bool {

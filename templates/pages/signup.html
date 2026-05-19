@@ -6,13 +6,20 @@
 <section class="auth-page">
   <div class="surface-panel form-panel">
     <div class="page-intro">
-      <p class="kicker">Open signup</p>
-      <h1 class="title">Create a Papyrd account</h1>
+      <p class="kicker">{% if signup_closed %}Signup closed{% else %}Open signup{% endif %}</p>
+      <h1 class="title">{% if signup_closed %}Signups are closed{% else %}Create a Papyrd account{% endif %}</h1>
+      {% if signup_closed %}
+      <p class="body">
+        This server is currently not accepting more signups. Contact the server administrator for an invitation.
+      </p>
+      {% else %}
       <p class="body">
         Accounts are shared across the household catalog. Pick a username you can sign in with later.
       </p>
+      {% endif %}
     </div>
 
+    {% if !signup_closed %}
     {% if let Some(message) = error %}
     <p class="message-box -error">{{ message }}</p>
     {% endif %}
@@ -30,6 +37,7 @@
 
       <button class="action-button" type="submit">Create account</button>
     </form>
+    {% endif %}
 
     <p class="support-copy">
       Already have an account?
