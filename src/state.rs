@@ -53,6 +53,10 @@ impl AppState {
         self.inner.config.session_cookie_secure
     }
 
+    pub fn disable_signup_after_first_user(&self) -> bool {
+        self.inner.config.disable_signup_after_first_user
+    }
+
     pub fn media_root(&self) -> &Path {
         self.inner.media_root.as_path()
     }

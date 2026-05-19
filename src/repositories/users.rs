@@ -34,6 +34,12 @@ pub async fn create_user(
     Ok(stored_user_from_row(row))
 }
 
+pub async fn has_any_users(db: &PgPool) -> Result<bool, sqlx::Error> {
+    sqlx::query_scalar::<_, bool>("select exists(select 1 from users)")
+        .fetch_one(db)
+        .await
+}
+
 pub async fn find_user_by_id(db: &PgPool, id: Uuid) -> Result<Option<User>, sqlx::Error> {
     let row = sqlx::query(
         r#"

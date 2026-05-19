@@ -2,6 +2,7 @@ use askama::Template;
 use axum::{
     Form,
     extract::State,
+    http::StatusCode,
     response::{Html, IntoResponse, Redirect, Response},
 };
 use axum_extra::extract::PrivateCookieJar;
@@ -38,6 +39,10 @@ pub async fn signup_form(
         return Ok(Redirect::to("/").into_response());
     }
 
+    if signup_is_closed(&state).await? {
+        return Ok(signup_closed_response());
+    }
+
     render_signup("", None)
 }
 
@@ -48,6 +53,10 @@ pub async fn signup(
 ) -> Result<Response, AppError> {
     if auth::current_user(state.db(), &jar).await?.is_some() {
         return Ok(Redirect::to("/").into_response());
+    }
+
+    if signup_is_closed(&state).await? {
+        return Ok(signup_closed_response());
     }
 
     let username = form.username.trim();
@@ -134,6 +143,10 @@ pub async fn signout(State(state): State<AppState>, jar: PrivateCookieJar) -> im
     (jar, Redirect::to("/signin"))
 }
 
+async fn signup_is_closed(state: &AppState) -> Result<bool, AppError> {
+    Ok(state.disable_signup_after_first_user() && users::has_any_users(state.db()).await?)
+}
+
 fn render_signup(username: &str, error: Option<&str>) -> Result<Response, AppError> {
     let html = SignupTemplate { username, error }.render()?;
     Ok(Html(html).into_response())
@@ -142,6 +155,10 @@ fn render_signup(username: &str, error: Option<&str>) -> Result<Response, AppErr
 fn render_signin(username: &str, error: Option<&str>) -> Result<Response, AppError> {
     let html = SigninTemplate { username, error }.render()?;
     Ok(Html(html).into_response())
+}
+
+fn signup_closed_response() -> Response {
+    (StatusCode::FORBIDDEN, "Signups are closed.").into_response()
 }
 
 fn is_unique_violation(error: &SqlxError) -> bool {

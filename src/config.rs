@@ -11,10 +11,12 @@ pub struct Config {
     pub ingest_root: PathBuf,
     pub session_key: Key,
     pub session_cookie_secure: bool,
+    pub disable_signup_after_first_user: bool,
 }
 
 const LOCAL_DEV_ENV_VAR: &str = "PAPYRD_LOCAL_DEV";
 const LOCAL_DEV_UNSAFE_VALUE: &str = "enable-unsafe-development-environment";
+const DISABLE_SIGNUP_AFTER_FIRST_USER_ENV_VAR: &str = "PAPYRD_DISABLE_SIGNUP_AFTER_FIRST_USER";
 
 impl Config {
     pub fn from_env() -> Result<Self, ConfigError> {
@@ -35,6 +37,11 @@ impl Config {
         let session_key = Key::from(&derive_session_key(&session_secret));
         let session_cookie_secure =
             secure_session_cookie_from_local_dev_env(env::var(LOCAL_DEV_ENV_VAR).ok().as_deref());
+        let disable_signup_after_first_user = disable_signup_after_first_user_from_env(
+            env::var(DISABLE_SIGNUP_AFTER_FIRST_USER_ENV_VAR)
+                .ok()
+                .as_deref(),
+        )?;
 
         Ok(Self {
             bind_address,
@@ -43,6 +50,7 @@ impl Config {
             ingest_root,
             session_key,
             session_cookie_secure,
+            disable_signup_after_first_user,
         })
     }
 }
@@ -55,6 +63,10 @@ pub enum ConfigError {
     MissingSessionSecret,
     #[error("invalid PAPYRD_BIND_ADDRESS")]
     InvalidBindAddress(#[from] std::net::AddrParseError),
+    #[error(
+        "invalid PAPYRD_DISABLE_SIGNUP_AFTER_FIRST_USER environment variable; expected true or false"
+    )]
+    InvalidDisableSignupAfterFirstUser,
 }
 
 fn default_bind_address() -> SocketAddr {
@@ -72,9 +84,21 @@ fn secure_session_cookie_from_local_dev_env(local_dev_value: Option<&str>) -> bo
     local_dev_value != Some(LOCAL_DEV_UNSAFE_VALUE)
 }
 
+fn disable_signup_after_first_user_from_env(value: Option<&str>) -> Result<bool, ConfigError> {
+    match value.map(str::trim) {
+        None => Ok(false),
+        Some("true") => Ok(true),
+        Some("false") => Ok(false),
+        Some(_) => Err(ConfigError::InvalidDisableSignupAfterFirstUser),
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::secure_session_cookie_from_local_dev_env;
+    use super::{
+        ConfigError, disable_signup_after_first_user_from_env,
+        secure_session_cookie_from_local_dev_env,
+    };
 
     #[test]
     fn session_cookie_is_secure_by_default() {
@@ -94,5 +118,28 @@ mod tests {
         assert!(!secure_session_cookie_from_local_dev_env(Some(
             "enable-unsafe-development-environment"
         )));
+    }
+
+    #[test]
+    fn signup_after_first_user_is_enabled_by_default() {
+        assert!(!disable_signup_after_first_user_from_env(None).unwrap());
+    }
+
+    #[test]
+    fn signup_after_first_user_can_be_disabled() {
+        assert!(disable_signup_after_first_user_from_env(Some("true")).unwrap());
+    }
+
+    #[test]
+    fn signup_after_first_user_can_be_left_enabled_explicitly() {
+        assert!(!disable_signup_after_first_user_from_env(Some("false")).unwrap());
+    }
+
+    #[test]
+    fn signup_after_first_user_rejects_invalid_values() {
+        assert!(matches!(
+            disable_signup_after_first_user_from_env(Some("1")),
+            Err(ConfigError::InvalidDisableSignupAfterFirstUser)
+        ));
     }
 }
