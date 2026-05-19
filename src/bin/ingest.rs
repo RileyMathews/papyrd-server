@@ -1,4 +1,7 @@
-use std::{ffi::OsStr, path::PathBuf};
+use std::{
+    ffi::OsStr,
+    path::{Path, PathBuf},
+};
 
 use notify::{Config as NotifyConfig, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use papyrd::{
@@ -68,7 +71,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 async fn process_existing_files(
     state: &state::AppState,
-    ingest_root: &PathBuf,
+    ingest_root: &Path,
 ) -> Result<(), std::io::Error> {
     let mut entries = tokio::fs::read_dir(ingest_root).await?;
 
@@ -92,8 +95,8 @@ async fn process_existing_files(
 
 async fn process_file(
     state: &state::AppState,
-    ingest_root: &PathBuf,
-    path: &PathBuf,
+    ingest_root: &Path,
+    path: &Path,
 ) -> Result<(), std::io::Error> {
     if !tokio::fs::try_exists(path).await? {
         debug!(path = %path.display(), "path no longer exists, skipping");
@@ -162,7 +165,7 @@ async fn process_file(
     Ok(())
 }
 
-fn is_epub(path: &PathBuf) -> bool {
+fn is_epub(path: &Path) -> bool {
     path.extension()
         .and_then(OsStr::to_str)
         .is_some_and(|value| value.eq_ignore_ascii_case("epub"))

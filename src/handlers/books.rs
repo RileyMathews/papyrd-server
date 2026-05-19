@@ -126,10 +126,10 @@ pub async fn delete(
         for asset_path in asset_paths {
             let absolute_path = state.media_root().join(asset_path);
 
-            if let Err(error) = tokio::fs::remove_file(&absolute_path).await {
-                if error.kind() != std::io::ErrorKind::NotFound {
-                    tracing::warn!(path = %absolute_path.display(), error = ?error, "failed to remove publication asset");
-                }
+            if let Err(error) = tokio::fs::remove_file(&absolute_path).await
+                && error.kind() != std::io::ErrorKind::NotFound
+            {
+                tracing::warn!(path = %absolute_path.display(), error = ?error, "failed to remove publication asset");
             }
         }
     }

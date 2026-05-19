@@ -165,7 +165,7 @@ pub async fn kosync_auth_user(
     Ok(Some(stored_user.user))
 }
 
-fn header_value_str<'a>(value: Option<&'a HeaderValue>) -> Option<&'a str> {
+fn header_value_str(value: Option<&HeaderValue>) -> Option<&str> {
     value.and_then(|value| value.to_str().ok())
 }
 

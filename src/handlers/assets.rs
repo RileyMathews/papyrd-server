@@ -172,7 +172,7 @@ fn sanitize_filename(input: &str) -> String {
 }
 
 fn content_disposition_header(filename: &str) -> Result<HeaderValue, AppError> {
-    let escaped = filename.replace('\\', "_").replace('"', "_");
+    let escaped = filename.replace(['\\', '"'], "_");
 
     HeaderValue::from_str(&format!("attachment; filename=\"{escaped}\""))
         .map_err(|error| std::io::Error::other(error.to_string()).into())
