@@ -23,6 +23,12 @@ struct SignupTemplate<'a> {
     username: &'a str,
     error: Option<&'a str>,
     signup_closed: bool,
+    initial_setup: bool,
+}
+
+struct SignupAvailability {
+    signup_closed: bool,
+    initial_setup: bool,
 }
 
 #[derive(Template)]
@@ -40,15 +46,16 @@ pub async fn signup_form(
         return Ok(Redirect::to("/").into_response());
     }
 
-    let signup_closed = signup_is_closed(&state).await?;
+    let signup_availability = signup_availability(&state).await?;
     let html = SignupTemplate {
         username: "",
         error: None,
-        signup_closed,
+        signup_closed: signup_availability.signup_closed,
+        initial_setup: signup_availability.initial_setup,
     }
     .render()?;
 
-    if signup_closed {
+    if signup_availability.signup_closed {
         return Ok((StatusCode::FORBIDDEN, Html(html)).into_response());
     }
 
@@ -64,11 +71,13 @@ pub async fn signup(
         return Ok(Redirect::to("/").into_response());
     }
 
-    if signup_is_closed(&state).await? {
+    let signup_availability = signup_availability(&state).await?;
+    if signup_availability.signup_closed {
         let html = SignupTemplate {
             username: "",
             error: None,
             signup_closed: true,
+            initial_setup: signup_availability.initial_setup,
         }
         .render()?;
         return Ok((StatusCode::FORBIDDEN, Html(html)).into_response());
@@ -81,6 +90,7 @@ pub async fn signup(
             username,
             error: Some("Username is required."),
             signup_closed: false,
+            initial_setup: signup_availability.initial_setup,
         }
         .render()?;
         return Ok(Html(html).into_response());
@@ -91,6 +101,7 @@ pub async fn signup(
             username,
             error: Some("Password is required."),
             signup_closed: false,
+            initial_setup: signup_availability.initial_setup,
         }
         .render()?;
         return Ok(Html(html).into_response());
@@ -104,6 +115,7 @@ pub async fn signup(
             username,
             error: Some("That username is already taken."),
             signup_closed: false,
+            initial_setup: signup_availability.initial_setup,
         }
         .render()?;
         return Ok(Html(html).into_response());
@@ -126,6 +138,7 @@ pub async fn signup(
                 username,
                 error: Some("That username is already taken."),
                 signup_closed: false,
+                initial_setup: signup_availability.initial_setup,
             }
             .render()?;
             return Ok(Html(html).into_response());
@@ -182,8 +195,13 @@ pub async fn signout(State(state): State<AppState>, jar: PrivateCookieJar) -> im
     (jar, Redirect::to("/signin"))
 }
 
-async fn signup_is_closed(state: &AppState) -> Result<bool, AppError> {
-    Ok(state.disable_signup_after_first_user() && users::has_any_users(state.db()).await?)
+async fn signup_availability(state: &AppState) -> Result<SignupAvailability, AppError> {
+    let has_users = users::has_any_users(state.db()).await?;
+
+    Ok(SignupAvailability {
+        signup_closed: state.disable_signup_after_first_user() && has_users,
+        initial_setup: !has_users,
+    })
 }
 
 fn render_signin(username: &str, error: Option<&str>) -> Result<Response, AppError> {

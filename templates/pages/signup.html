@@ -6,11 +6,15 @@
 <section class="auth-page">
   <div class="surface-panel form-panel">
     <div class="page-intro">
-      <p class="kicker">{% if signup_closed %}Signup closed{% else %}Open signup{% endif %}</p>
-      <h1 class="title">{% if signup_closed %}Signups are closed{% else %}Create a Papyrd account{% endif %}</h1>
+      <p class="kicker">{% if signup_closed %}Signup closed{% else if initial_setup %}Admin setup{% else %}Open signup{% endif %}</p>
+      <h1 class="title">{% if signup_closed %}Signups are closed{% else if initial_setup %}Create the server administrator{% else %}Create a Papyrd account{% endif %}</h1>
       {% if signup_closed %}
       <p class="body">
         This server is currently not accepting more signups. Contact the server administrator for an invitation.
+      </p>
+      {% else if initial_setup %}
+      <p class="body">
+        No accounts exist yet. The first user to sign up will become the server administrator for this Papyrd server.
       </p>
       {% else %}
       <p class="body">
