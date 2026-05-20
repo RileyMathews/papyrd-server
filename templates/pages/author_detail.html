@@ -3,12 +3,7 @@
 {% block title %}{{ author_name }}{% endblock %}
 
 {% block header_nav %}
-<a class="item" href="/books">All books</a>
-<a class="item -current" href="/authors">Authors</a>
-<a class="item" href="/upload">Upload</a>
-<form class="form" method="post" action="/signout">
-  <button class="item item-button" type="submit">Sign out</button>
-</form>
+{% include "partials/app_nav.html" %}
 {% endblock %}
 
 {% block content %}

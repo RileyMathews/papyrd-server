@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use sqlx::{PgPool, Row};
+use sqlx::{Executor, PgPool, Postgres, Row};
 use uuid::Uuid;
 
 use crate::domain::user::User;
@@ -10,13 +10,16 @@ pub struct StoredUser {
     pub kosync_userkey_hash: Option<String>,
 }
 
-pub async fn create_user(
-    db: &PgPool,
+pub async fn create_user<'e, E>(
+    executor: E,
     username: &str,
     normalized_username: &str,
     password_hash: &str,
     kosync_userkey_hash: &str,
-) -> Result<StoredUser, sqlx::Error> {
+) -> Result<StoredUser, sqlx::Error>
+where
+    E: Executor<'e, Database = Postgres>,
+{
     let row = sqlx::query(
         r#"
         insert into users (username, normalized_username, password_hash, kosync_userkey_hash)
@@ -28,10 +31,24 @@ pub async fn create_user(
     .bind(normalized_username)
     .bind(password_hash)
     .bind(kosync_userkey_hash)
-    .fetch_one(db)
+    .fetch_one(executor)
     .await?;
 
     Ok(stored_user_from_row(row))
+}
+
+pub async fn list_users(db: &PgPool) -> Result<Vec<User>, sqlx::Error> {
+    let rows = sqlx::query(
+        r#"
+        select id, username, normalized_username, created_at, updated_at
+        from users
+        order by lower(username), created_at
+        "#,
+    )
+    .fetch_all(db)
+    .await?;
+
+    Ok(rows.into_iter().map(|row| user_from_row(&row)).collect())
 }
 
 pub async fn has_any_users(db: &PgPool) -> Result<bool, sqlx::Error> {
@@ -52,7 +69,7 @@ pub async fn find_user_by_id(db: &PgPool, id: Uuid) -> Result<Option<User>, sqlx
     .fetch_optional(db)
     .await?;
 
-    Ok(row.map(stored_user_from_row).map(|stored| stored.user))
+    Ok(row.map(|row| user_from_row(&row)))
 }
 
 pub async fn find_user_by_normalized_username(
@@ -75,13 +92,17 @@ pub async fn find_user_by_normalized_username(
 
 fn stored_user_from_row(row: sqlx::postgres::PgRow) -> StoredUser {
     StoredUser {
-        user: User {
-            id: row.get("id"),
-            username: row.get("username"),
-            created_at: row.get::<DateTime<Utc>, _>("created_at"),
-            updated_at: row.get::<DateTime<Utc>, _>("updated_at"),
-        },
+        user: user_from_row(&row),
         password_hash: row.get("password_hash"),
         kosync_userkey_hash: row.get("kosync_userkey_hash"),
+    }
+}
+
+fn user_from_row(row: &sqlx::postgres::PgRow) -> User {
+    User {
+        id: row.get("id"),
+        username: row.get("username"),
+        created_at: row.get::<DateTime<Utc>, _>("created_at"),
+        updated_at: row.get::<DateTime<Utc>, _>("updated_at"),
     }
 }

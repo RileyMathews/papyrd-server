@@ -40,6 +40,11 @@ pub fn app(state: AppState) -> Router {
         .route("/books/{id}/download", get(handlers::assets::download_epub))
         .route("/users/create", post(handlers::kosync::register))
         .route("/users/auth", get(handlers::kosync::authorize))
+        .route("/admin/users", get(handlers::admin::users))
+        .route(
+            "/admin/users/{id}/permissions",
+            get(handlers::admin::edit_permissions_form).post(handlers::admin::update_permissions),
+        )
         .route(
             "/syncs/progress",
             axum::routing::put(handlers::kosync::update_progress),

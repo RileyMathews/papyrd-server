@@ -10,7 +10,9 @@ use crate::{
     auth,
     domain::publication::{PublicationDetail, PublicationSummary},
     error::AppError,
-    repositories::{publications, reading_progress},
+    handlers::nav::NavView,
+    permissions::Permission,
+    repositories::{publications, reading_progress, user_permissions},
     state::AppState,
 };
 
@@ -18,6 +20,8 @@ use crate::{
 #[template(path = "pages/books.html")]
 struct BooksTemplate<'a> {
     publications: &'a [PublicationSummary],
+    nav: NavView,
+    active_nav: &'static str,
 }
 
 #[derive(Template)]
@@ -25,6 +29,8 @@ struct BooksTemplate<'a> {
 struct BookDetailTemplate<'a> {
     publication: &'a PublicationDetail,
     sync_status: SyncStatusView,
+    nav: NavView,
+    active_nav: &'static str,
 }
 
 struct SyncStatusView {
@@ -39,13 +45,17 @@ pub async fn index(
     State(state): State<AppState>,
     jar: PrivateCookieJar,
 ) -> Result<Response, AppError> {
-    let Some(_user) = auth::current_user(state.db(), &jar).await? else {
+    let Some(user) = auth::current_user(state.db(), &jar).await? else {
         return Ok(Redirect::to("/signin").into_response());
     };
+    let permissions = user_permissions::permission_set_for_user(state.db(), user.id).await?;
+    let nav = NavView::from_permissions(&permissions);
 
     let publications = publications::list_publications(state.db()).await?;
     let html = BooksTemplate {
         publications: &publications,
+        nav,
+        active_nav: "books",
     }
     .render()?;
 
@@ -60,6 +70,8 @@ pub async fn show(
     let Some(user) = auth::current_user(state.db(), &jar).await? else {
         return Ok(Redirect::to("/signin").into_response());
     };
+    let permissions = user_permissions::permission_set_for_user(state.db(), user.id).await?;
+    let nav = NavView::from_permissions(&permissions);
 
     let Some(publication) =
         publications::find_publication_by_id(state.db(), publication_id).await?
@@ -77,6 +89,8 @@ pub async fn show(
     let html = BookDetailTemplate {
         publication: &publication,
         sync_status: SyncStatusView::from_progress(progress),
+        nav,
+        active_nav: "books",
     }
     .render()?;
 
@@ -118,9 +132,11 @@ pub async fn delete(
     Path(publication_id): Path<Uuid>,
     jar: PrivateCookieJar,
 ) -> Result<Response, AppError> {
-    let Some(_user) = auth::current_user(state.db(), &jar).await? else {
+    let Some(user) = auth::current_user(state.db(), &jar).await? else {
         return Ok(Redirect::to("/signin").into_response());
     };
+    let permissions = user_permissions::permission_set_for_user(state.db(), user.id).await?;
+    permissions.require(Permission::PublicationDelete)?;
 
     if let Some(asset_paths) = publications::delete_publication(state.db(), publication_id).await? {
         for asset_path in asset_paths {

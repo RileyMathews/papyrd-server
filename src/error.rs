@@ -18,6 +18,10 @@ pub enum AppError {
     Io(#[from] std::io::Error),
     #[error("password hashing failed")]
     PasswordHash,
+    #[error("permission denied")]
+    Forbidden,
+    #[error("{0}")]
+    BadRequest(&'static str),
     #[error("opds authentication required")]
     OpdsUnauthorized,
 }
@@ -29,6 +33,8 @@ impl IntoResponse for AppError {
             Self::Database(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::Io(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::PasswordHash => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::Forbidden => StatusCode::FORBIDDEN,
+            Self::BadRequest(_) => StatusCode::BAD_REQUEST,
             Self::OpdsUnauthorized => StatusCode::UNAUTHORIZED,
         };
 
@@ -50,6 +56,8 @@ impl IntoResponse for AppError {
             }
             Self::Io(error_value) => error!(error = ?error_value, "filesystem operation failed"),
             Self::PasswordHash => error!("password hashing failed"),
+            Self::Forbidden => {}
+            Self::BadRequest(_) => {}
             Self::OpdsUnauthorized => {}
         }
 

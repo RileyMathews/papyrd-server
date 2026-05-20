@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+
+{% block title %}Users | Papyrd{% endblock %}
+
+{% block header_nav %}
+{% include "partials/app_nav.html" %}
+{% endblock %}
+
+{% block content %}
+<section class="catalog-page">
+  <div class="catalog-bar">
+    <div class="page-intro">
+      <p class="kicker">Administration</p>
+      <h1 class="title">Users</h1>
+      <p class="body">
+        View server users and manage their permissions.
+      </p>
+    </div>
+  </div>
+
+  <section class="surface-panel user-list">
+    {% for user in users %}
+    <article class="user-row">
+      <div class="text">
+        <h2 class="name">{{ user.username }}</h2>
+        <p class="meta">Created {{ user.created_at.format("%Y-%m-%d") }}</p>
+      </div>
+      <a class="action-button -compact" href="/admin/users/{{ user.id }}/permissions">Permissions</a>
+    </article>
+    {% endfor %}
+  </section>
+</section>
+{% endblock %}

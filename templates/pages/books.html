@@ -3,12 +3,7 @@
 {% block title %}All Books{% endblock %}
 
 {% block header_nav %}
-<a class="item -current" href="/books">All books</a>
-<a class="item" href="/authors">Authors</a>
-<a class="item" href="/upload">Upload</a>
-<form class="form" method="post" action="/signout">
-  <button class="item item-button" type="submit">Sign out</button>
-</form>
+{% include "partials/app_nav.html" %}
 {% endblock %}
 
 {% block content %}
@@ -21,7 +16,9 @@
         Browse the shared library or add a new EPUB to the catalog.
       </p>
     </div>
+    {% if nav.can_upload_publications %}
     <a class="action-button" href="/upload">Upload a book</a>
+    {% endif %}
   </div>
 
   {% if publications.len() == 0 %}
@@ -30,7 +27,7 @@
       <p class="kicker">Nothing here yet</p>
       <h2 class="title">Your catalog is empty.</h2>
       <p class="body">
-        Upload the first EPUB to create the shared library.
+        {% if nav.can_upload_publications %}Upload the first EPUB to create the shared library.{% else %}Books will appear here after someone with upload permission adds them.{% endif %}
       </p>
     </div>
   </section>

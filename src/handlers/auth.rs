@@ -9,7 +9,13 @@ use axum_extra::extract::PrivateCookieJar;
 use serde::Deserialize;
 use sqlx::Error as SqlxError;
 
-use crate::{auth, error::AppError, repositories::users, state::AppState};
+use crate::{
+    auth,
+    error::AppError,
+    permissions::Permission,
+    repositories::{user_permissions, users},
+    state::AppState,
+};
 
 #[derive(Deserialize)]
 pub struct AuthForm {
@@ -123,15 +129,27 @@ pub async fn signup(
 
     let password_hash = auth::hash_password(password)?;
     let kosync_userkey_hash = auth::hash_kosync_userkey(&auth::kosync_userkey(password))?;
-    let created = match users::create_user(
-        state.db(),
-        username,
-        &normalized_username,
-        &password_hash,
-        &kosync_userkey_hash,
-    )
-    .await
-    {
+    let created_result = if signup_availability.initial_setup {
+        create_initial_setup_user(
+            &state,
+            username,
+            &normalized_username,
+            &password_hash,
+            &kosync_userkey_hash,
+        )
+        .await
+    } else {
+        users::create_user(
+            state.db(),
+            username,
+            &normalized_username,
+            &password_hash,
+            &kosync_userkey_hash,
+        )
+        .await
+    };
+
+    let created = match created_result {
         Ok(created) => created,
         Err(error) if is_unique_violation(&error) => {
             let html = SignupTemplate {
@@ -202,6 +220,34 @@ async fn signup_availability(state: &AppState) -> Result<SignupAvailability, App
         signup_closed: state.disable_signup_after_first_user() && has_users,
         initial_setup: !has_users,
     })
+}
+
+async fn create_initial_setup_user(
+    state: &AppState,
+    username: &str,
+    normalized_username: &str,
+    password_hash: &str,
+    kosync_userkey_hash: &str,
+) -> Result<users::StoredUser, SqlxError> {
+    let mut transaction = state.db().begin().await?;
+    let created = users::create_user(
+        &mut *transaction,
+        username,
+        normalized_username,
+        password_hash,
+        kosync_userkey_hash,
+    )
+    .await?;
+    user_permissions::grant_permissions(
+        &mut *transaction,
+        created.user.id,
+        &Permission::ALL,
+        Some(created.user.id),
+    )
+    .await?;
+    transaction.commit().await?;
+
+    Ok(created)
 }
 
 fn render_signin(username: &str, error: Option<&str>) -> Result<Response, AppError> {

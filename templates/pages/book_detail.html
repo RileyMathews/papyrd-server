@@ -3,12 +3,7 @@
 {% block title %}{{ publication.title }}{% endblock %}
 
 {% block header_nav %}
-<a class="item -current" href="/books">All books</a>
-<a class="item" href="/authors">Authors</a>
-<a class="item" href="/upload">Upload</a>
-<form class="form" method="post" action="/signout">
-  <button class="item item-button" type="submit">Sign out</button>
-</form>
+{% include "partials/app_nav.html" %}
 {% endblock %}
 
 {% block content %}
@@ -92,9 +87,11 @@
         {% if let Some(epub_path) = publication.epub_path %}
         <a class="action-button" href="/books/{{ publication.id }}/download">Download EPUB</a>
         {% endif %}
-        <form method="post" action="/books/{{ publication.id }}/delete">
-          <button class="action-button -danger -compact" type="submit">Delete book</button>
-        </form>
+        {% if nav.can_delete_publications %}
+          <form method="post" action="/books/{{ publication.id }}/delete">
+            <button class="action-button -danger -compact" type="submit">Delete book</button>
+          </form>
+        {% endif %}
       </div>
     </div>
   </article>

@@ -9,7 +9,10 @@ use axum_extra::extract::PrivateCookieJar;
 use crate::{
     auth,
     error::AppError,
+    handlers::nav::NavView,
     ingest::{self, IngestError},
+    permissions::Permission,
+    repositories::user_permissions,
     state::AppState,
 };
 
@@ -19,6 +22,8 @@ struct UploadTemplate<'a> {
     error: Option<&'a str>,
     summary: Option<UploadSummary>,
     results: Vec<UploadResult>,
+    nav: NavView,
+    active_nav: &'static str,
 }
 
 #[derive(Clone, Debug)]
@@ -41,11 +46,14 @@ pub async fn upload_form(
     State(state): State<AppState>,
     jar: PrivateCookieJar,
 ) -> Result<Response, AppError> {
-    let Some(_user) = auth::current_user(state.db(), &jar).await? else {
+    let Some(user) = auth::current_user(state.db(), &jar).await? else {
         return Ok(Redirect::to("/signin").into_response());
     };
+    let permissions = user_permissions::permission_set_for_user(state.db(), user.id).await?;
+    permissions.require(Permission::PublicationUpload)?;
+    let nav = NavView::from_permissions(&permissions);
 
-    render_upload(None, None, Vec::new())
+    render_upload(nav, None, None, Vec::new())
 }
 
 pub async fn upload(
@@ -53,9 +61,12 @@ pub async fn upload(
     jar: PrivateCookieJar,
     mut multipart: Multipart,
 ) -> Result<Response, AppError> {
-    let Some(_user) = auth::current_user(state.db(), &jar).await? else {
+    let Some(user) = auth::current_user(state.db(), &jar).await? else {
         return Ok(Redirect::to("/signin").into_response());
     };
+    let permissions = user_permissions::permission_set_for_user(state.db(), user.id).await?;
+    permissions.require(Permission::PublicationUpload)?;
+    let nav = NavView::from_permissions(&permissions);
 
     let mut results = Vec::new();
 
@@ -93,6 +104,7 @@ pub async fn upload(
 
     if results.is_empty() {
         return render_upload(
+            nav,
             Some("Choose one or more EPUB files to upload."),
             None,
             results,
@@ -114,7 +126,7 @@ pub async fn upload(
             .count(),
     };
 
-    render_upload(None, Some(summary), results)
+    render_upload(nav, None, Some(summary), results)
 }
 
 async fn upload_result_for_file(
@@ -160,6 +172,7 @@ async fn upload_result_for_file(
 }
 
 fn render_upload(
+    nav: NavView,
     error: Option<&str>,
     summary: Option<UploadSummary>,
     results: Vec<UploadResult>,
@@ -168,6 +181,8 @@ fn render_upload(
         error,
         summary,
         results,
+        nav,
+        active_nav: "upload",
     }
     .render()?;
     Ok(Html(html).into_response())
