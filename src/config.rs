@@ -86,7 +86,7 @@ fn secure_session_cookie_from_local_dev_env(local_dev_value: Option<&str>) -> bo
 
 fn disable_signup_after_first_user_from_env(value: Option<&str>) -> Result<bool, ConfigError> {
     match value.map(str::trim) {
-        None => Ok(false),
+        None => Ok(true),
         Some("true") => Ok(true),
         Some("false") => Ok(false),
         Some(_) => Err(ConfigError::InvalidDisableSignupAfterFirstUser),

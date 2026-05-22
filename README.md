@@ -38,6 +38,7 @@ services:
       PAPYRD_SESSION_SECRET: change-this-to-a-long-random-string
       PAPYRD_BIND_ADDRESS: 0.0.0.0:3000
       PAPYRD_STORAGE_ROOT: /app/storage # THIS MUST MATCH INGEST STORAGE ROOT IF USING INGEST SERVICE
+      PAPYRD_DISABLE_SIGNUP_AFTER_FIRST_USER: true # disables signup after the first user has registered. See notes on server config below for more info
     volumes:
       - papyrd-storage:/app/storage
     depends_on:
@@ -90,3 +91,12 @@ The OPDS entrypoint for your server will be at the `/opds` path. So for example 
 
 # Kosync
 To use the kosync server for progress syncing you should just configure kosync with the root domain of your server. i.e. `https://papyrd.mydomain.com`
+
+# Server Setup and permissions
+By default the server disables signups after the first user has signed up. You can override this behavior by setting the environment variable 
+`PAPYRD_DISABLE_SIGNUP_AFTER_FIRST_USER` to `false`. This is done as a preventative measure for publically exposed instances.
+An invite system will be added soon to invite users to the app when this setting is false.
+
+Also by default all users after the first have no 'edit' permissions. Users can read and download all books by default
+but they cannot delete or upload books and they cannot edit other users permissions. Permissions can be assigned
+via the users tab in the web app.
