@@ -12,11 +12,14 @@ pub struct Config {
     pub session_key: Key,
     pub session_cookie_secure: bool,
     pub disable_signup_after_first_user: bool,
+    pub invite_expiration_seconds: i64,
 }
 
 const LOCAL_DEV_ENV_VAR: &str = "PAPYRD_LOCAL_DEV";
 const LOCAL_DEV_UNSAFE_VALUE: &str = "enable-unsafe-development-environment";
 const DISABLE_SIGNUP_AFTER_FIRST_USER_ENV_VAR: &str = "PAPYRD_DISABLE_SIGNUP_AFTER_FIRST_USER";
+const INVITE_EXPIRATION_SECONDS_ENV_VAR: &str = "PAPYRD_INVITE_EXPIRATION_SECONDS";
+const DEFAULT_INVITE_EXPIRATION_SECONDS: i64 = 24 * 60 * 60;
 
 impl Config {
     pub fn from_env() -> Result<Self, ConfigError> {
@@ -42,6 +45,9 @@ impl Config {
                 .ok()
                 .as_deref(),
         )?;
+        let invite_expiration_seconds = invite_expiration_seconds_from_env(
+            env::var(INVITE_EXPIRATION_SECONDS_ENV_VAR).ok().as_deref(),
+        )?;
 
         Ok(Self {
             bind_address,
@@ -51,6 +57,7 @@ impl Config {
             session_key,
             session_cookie_secure,
             disable_signup_after_first_user,
+            invite_expiration_seconds,
         })
     }
 }
@@ -67,6 +74,10 @@ pub enum ConfigError {
         "invalid PAPYRD_DISABLE_SIGNUP_AFTER_FIRST_USER environment variable; expected true or false"
     )]
     InvalidDisableSignupAfterFirstUser,
+    #[error(
+        "invalid PAPYRD_INVITE_EXPIRATION_SECONDS environment variable; expected a positive integer"
+    )]
+    InvalidInviteExpirationSeconds,
 }
 
 fn default_bind_address() -> SocketAddr {
@@ -93,11 +104,22 @@ fn disable_signup_after_first_user_from_env(value: Option<&str>) -> Result<bool,
     }
 }
 
+fn invite_expiration_seconds_from_env(value: Option<&str>) -> Result<i64, ConfigError> {
+    match value.map(str::trim) {
+        None => Ok(DEFAULT_INVITE_EXPIRATION_SECONDS),
+        Some(value) => value
+            .parse::<i64>()
+            .ok()
+            .filter(|seconds| *seconds > 0)
+            .ok_or(ConfigError::InvalidInviteExpirationSeconds),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
-        ConfigError, disable_signup_after_first_user_from_env,
-        secure_session_cookie_from_local_dev_env,
+        ConfigError, DEFAULT_INVITE_EXPIRATION_SECONDS, disable_signup_after_first_user_from_env,
+        invite_expiration_seconds_from_env, secure_session_cookie_from_local_dev_env,
     };
 
     #[test]
@@ -121,8 +143,8 @@ mod tests {
     }
 
     #[test]
-    fn signup_after_first_user_is_enabled_by_default() {
-        assert!(!disable_signup_after_first_user_from_env(None).unwrap());
+    fn signup_after_first_user_is_disabled_by_default() {
+        assert!(disable_signup_after_first_user_from_env(None).unwrap());
     }
 
     #[test]
@@ -140,6 +162,38 @@ mod tests {
         assert!(matches!(
             disable_signup_after_first_user_from_env(Some("1")),
             Err(ConfigError::InvalidDisableSignupAfterFirstUser)
+        ));
+    }
+
+    #[test]
+    fn invite_expiration_defaults_to_one_day() {
+        assert_eq!(
+            invite_expiration_seconds_from_env(None).unwrap(),
+            DEFAULT_INVITE_EXPIRATION_SECONDS
+        );
+    }
+
+    #[test]
+    fn invite_expiration_can_be_configured() {
+        assert_eq!(
+            invite_expiration_seconds_from_env(Some("3600")).unwrap(),
+            3600
+        );
+    }
+
+    #[test]
+    fn invite_expiration_rejects_invalid_values() {
+        assert!(matches!(
+            invite_expiration_seconds_from_env(Some("0")),
+            Err(ConfigError::InvalidInviteExpirationSeconds)
+        ));
+        assert!(matches!(
+            invite_expiration_seconds_from_env(Some("-1")),
+            Err(ConfigError::InvalidInviteExpirationSeconds)
+        ));
+        assert!(matches!(
+            invite_expiration_seconds_from_env(Some("tomorrow")),
+            Err(ConfigError::InvalidInviteExpirationSeconds)
         ));
     }
 }

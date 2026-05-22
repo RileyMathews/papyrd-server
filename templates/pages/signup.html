@@ -6,15 +6,23 @@
 <section class="auth-page">
   <div class="surface-panel form-panel">
     <div class="page-intro">
-      <p class="kicker">{% if signup_closed %}Signup closed{% else if initial_setup %}Admin setup{% else %}Open signup{% endif %}</p>
-      <h1 class="title">{% if signup_closed %}Signups are closed{% else if initial_setup %}Create the server administrator{% else %}Create a Papyrd account{% endif %}</h1>
+      <p class="kicker">{% if signup_closed %}Signup closed{% else if initial_setup %}Admin setup{% else if invite_unlocked %}Invite accepted{% else %}Open signup{% endif %}</p>
+      <h1 class="title">{% if signup_closed %}Signups are closed{% else if initial_setup %}Create the server administrator{% else if invite_unlocked %}Create your invited account{% else %}Create a Papyrd account{% endif %}</h1>
       {% if signup_closed %}
       <p class="body">
+        {% if invalid_invite %}
+        This invitation is expired, revoked, or has already been used. Contact the server administrator for a new invitation.
+        {% else %}
         This server is currently not accepting more signups. Contact the server administrator for an invitation.
+        {% endif %}
       </p>
       {% else if initial_setup %}
       <p class="body">
         No accounts exist yet. The first user to sign up will become the server administrator for this Papyrd server.
+      </p>
+      {% else if invite_unlocked %}
+      <p class="body">
+        Your invitation is valid. Create an account to join this Papyrd server.
       </p>
       {% else %}
       <p class="body">
@@ -23,12 +31,16 @@
       {% endif %}
     </div>
 
-    {% if !signup_closed %}
     {% if let Some(message) = error %}
     <p class="message-box -error">{{ message }}</p>
     {% endif %}
 
+    {% if !signup_closed %}
     <form class="form-stack" method="post" action="/signup">
+      {% if let Some(invite_key) = invite_key %}
+      <input type="hidden" name="invite" value="{{ invite_key }}">
+      {% endif %}
+
       <label class="form-field">
         <span class="label">Username</span>
         <input class="input" type="text" name="username" value="{{ username }}" autocomplete="username" required>

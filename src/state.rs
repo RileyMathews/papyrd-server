@@ -57,6 +57,10 @@ impl AppState {
         self.inner.config.disable_signup_after_first_user
     }
 
+    pub fn invite_expiration_seconds(&self) -> i64 {
+        self.inner.config.invite_expiration_seconds
+    }
+
     pub fn media_root(&self) -> &Path {
         self.inner.media_root.as_path()
     }

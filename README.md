@@ -39,6 +39,7 @@ services:
       PAPYRD_BIND_ADDRESS: 0.0.0.0:3000
       PAPYRD_STORAGE_ROOT: /app/storage # THIS MUST MATCH INGEST STORAGE ROOT IF USING INGEST SERVICE
       PAPYRD_DISABLE_SIGNUP_AFTER_FIRST_USER: true # disables signup after the first user has registered. See notes on server config below for more info
+      PAPYRD_INVITE_EXPIRATION_SECONDS: 86400 # optional, defaults to 1 day
     volumes:
       - papyrd-storage:/app/storage
     depends_on:
@@ -95,7 +96,9 @@ To use the kosync server for progress syncing you should just configure kosync w
 # Server Setup and permissions
 By default the server disables signups after the first user has signed up. You can override this behavior by setting the environment variable 
 `PAPYRD_DISABLE_SIGNUP_AFTER_FIRST_USER` to `false`. This is done as a preventative measure for publically exposed instances.
-An invite system will be added soon to invite users to the app when this setting is false.
+When signups are disabled, users with the `Invite users` permission can create one-time invite links from the web app.
+Invite links unlock the signup page when passed as `/signup?invite=<key>`, expire after `PAPYRD_INVITE_EXPIRATION_SECONDS`,
+and can be manually expired from the invite list. The invite expiration defaults to `86400` seconds.
 
 Also by default all users after the first have no 'edit' permissions. Users can read and download all books by default
 but they cannot delete or upload books and they cannot edit other users permissions. Permissions can be assigned

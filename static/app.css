@@ -154,6 +154,13 @@ a:hover {
   font-size: 1.02rem;
 }
 
+.section-title {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.45rem;
+  line-height: 1.1;
+}
+
 .catalog-page {
   display: grid;
   gap: 2rem;
@@ -220,6 +227,10 @@ a:hover {
 
 .form-field > .input.-file {
   padding-block: 0.75rem;
+}
+
+textarea.input {
+  resize: vertical;
 }
 
 .message-box {
@@ -438,6 +449,54 @@ a:hover {
 .user-row .meta {
   margin-top: 0.25rem;
   color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.invite-create-panel,
+.invite-list-panel {
+  display: grid;
+  gap: 1.4rem;
+}
+
+.invite-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.invite-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.invite-row > .text {
+  display: grid;
+  min-width: 0;
+  gap: 0.45rem;
+}
+
+.invite-link {
+  overflow-wrap: anywhere;
+  font-weight: 800;
+}
+
+.invite-row .note,
+.invite-row .meta,
+.empty-copy {
+  margin: 0;
+  color: var(--muted);
+}
+
+.invite-row .note {
+  color: var(--soft);
+}
+
+.invite-row .meta {
   font-size: 0.92rem;
 }
 
@@ -741,6 +800,10 @@ a:hover {
 
   .user-row {
     align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .invite-row {
     flex-direction: column;
   }
 

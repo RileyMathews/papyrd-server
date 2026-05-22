@@ -42,6 +42,14 @@ pub fn app(state: AppState) -> Router {
         .route("/users/auth", get(handlers::kosync::authorize))
         .route("/admin/users", get(handlers::admin::users))
         .route(
+            "/admin/invites",
+            get(handlers::admin::invites).post(handlers::admin::create_invite),
+        )
+        .route(
+            "/admin/invites/{id}/expire",
+            post(handlers::admin::expire_invite),
+        )
+        .route(
             "/admin/users/{id}/permissions",
             get(handlers::admin::edit_permissions_form).post(handlers::admin::update_permissions),
         )

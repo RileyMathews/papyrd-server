@@ -6,6 +6,9 @@
 {% if nav.can_edit_permissions %}
 <a class="item{% if active_nav == "admin" %} -current{% endif %}" href="/admin/users">Users</a>
 {% endif %}
+{% if nav.can_invite_users %}
+<a class="item{% if active_nav == "invites" %} -current{% endif %}" href="/admin/invites">Invites</a>
+{% endif %}
 <form class="form" method="post" action="/signout">
   <button class="item item-button" type="submit">Sign out</button>
 </form>

@@ -7,6 +7,7 @@ use axum::{
     response::{Html, IntoResponse, Redirect, Response},
 };
 use axum_extra::extract::PrivateCookieJar;
+use chrono::{Duration, Utc};
 use serde::Deserialize;
 use uuid::Uuid;
 
@@ -16,7 +17,7 @@ use crate::{
     error::AppError,
     handlers::nav::NavView,
     permissions::Permission,
-    repositories::{user_permissions, users},
+    repositories::{signup_invites, user_permissions, users},
     state::AppState,
 };
 
@@ -38,6 +39,17 @@ struct AdminUserPermissionsTemplate<'a> {
     active_nav: &'static str,
 }
 
+#[derive(Template)]
+#[template(path = "pages/admin_invites.html")]
+struct AdminInvitesTemplate {
+    invites: Vec<InviteView>,
+    has_invites: bool,
+    created: bool,
+    expired: bool,
+    nav: NavView,
+    active_nav: &'static str,
+}
+
 struct PermissionOptionView {
     input_id: String,
     value: &'static str,
@@ -46,15 +58,35 @@ struct PermissionOptionView {
     checked: bool,
 }
 
+struct InviteView {
+    id: Uuid,
+    link: String,
+    note: Option<String>,
+    created_by: String,
+    created_at: String,
+    expires_at: String,
+}
+
 #[derive(Deserialize)]
 pub struct PermissionQuery {
     saved: Option<String>,
 }
 
 #[derive(Deserialize)]
+pub struct InvitesQuery {
+    created: Option<String>,
+    expired: Option<String>,
+}
+
+#[derive(Deserialize)]
 pub struct PermissionForm {
     #[serde(default)]
     permissions: Vec<String>,
+}
+
+#[derive(Deserialize)]
+pub struct InviteForm {
+    note: Option<String>,
 }
 
 pub async fn users(
@@ -136,6 +168,71 @@ pub async fn update_permissions(
     Ok(Redirect::to(&location).into_response())
 }
 
+pub async fn invites(
+    State(state): State<AppState>,
+    Query(query): Query<InvitesQuery>,
+    jar: PrivateCookieJar,
+) -> Result<Response, AppError> {
+    let Some((_current_user, nav)) = invite_admin_context(&state, &jar).await? else {
+        return Ok(Redirect::to("/signin").into_response());
+    };
+
+    let invites: Vec<InviteView> = signup_invites::list_open_invites(state.db())
+        .await?
+        .into_iter()
+        .map(InviteView::from_invite)
+        .collect();
+    let has_invites = !invites.is_empty();
+    let html = AdminInvitesTemplate {
+        invites,
+        has_invites,
+        created: query.created.is_some(),
+        expired: query.expired.is_some(),
+        nav,
+        active_nav: "invites",
+    }
+    .render()?;
+
+    Ok(Html(html).into_response())
+}
+
+pub async fn create_invite(
+    State(state): State<AppState>,
+    jar: PrivateCookieJar,
+    Form(form): Form<InviteForm>,
+) -> Result<Response, AppError> {
+    let Some((current_user, _nav)) = invite_admin_context(&state, &jar).await? else {
+        return Ok(Redirect::to("/signin").into_response());
+    };
+
+    let note = normalize_note(form.note.as_deref());
+    let expires_at = Utc::now() + Duration::seconds(state.invite_expiration_seconds());
+    signup_invites::create_invite(
+        state.db(),
+        &new_invite_key(),
+        note.as_deref(),
+        current_user.id,
+        expires_at,
+    )
+    .await?;
+
+    Ok(Redirect::to("/admin/invites?created=1").into_response())
+}
+
+pub async fn expire_invite(
+    State(state): State<AppState>,
+    Path(invite_id): Path<Uuid>,
+    jar: PrivateCookieJar,
+) -> Result<Response, AppError> {
+    let Some((_current_user, _nav)) = invite_admin_context(&state, &jar).await? else {
+        return Ok(Redirect::to("/signin").into_response());
+    };
+
+    signup_invites::revoke_invite(state.db(), invite_id).await?;
+
+    Ok(Redirect::to("/admin/invites?expired=1").into_response())
+}
+
 fn permission_options(active_permissions: &[Permission]) -> Vec<PermissionOptionView> {
     let active_permissions = active_permissions.iter().copied().collect::<HashSet<_>>();
 
@@ -167,4 +264,45 @@ fn parse_permissions(values: &[String]) -> Result<Vec<Permission>, AppError> {
     }
 
     Ok(permissions)
+}
+
+impl InviteView {
+    fn from_invite(invite: signup_invites::SignupInvite) -> Self {
+        Self {
+            id: invite.id,
+            link: format!("/signup?invite={}", invite.invite_key),
+            note: invite.note,
+            created_by: invite
+                .created_by_username
+                .unwrap_or_else(|| "Deleted user".to_owned()),
+            created_at: invite.created_at.format("%Y-%m-%d %H:%M UTC").to_string(),
+            expires_at: invite.expires_at.format("%Y-%m-%d %H:%M UTC").to_string(),
+        }
+    }
+}
+
+async fn invite_admin_context(
+    state: &AppState,
+    jar: &PrivateCookieJar,
+) -> Result<Option<(User, NavView)>, AppError> {
+    let Some(current_user) = auth::current_user(state.db(), jar).await? else {
+        return Ok(None);
+    };
+    let current_permissions =
+        user_permissions::permission_set_for_user(state.db(), current_user.id).await?;
+    current_permissions.require(Permission::UserInvitesCreate)?;
+    let nav = NavView::from_permissions(&current_permissions);
+
+    Ok(Some((current_user, nav)))
+}
+
+fn normalize_note(value: Option<&str>) -> Option<String> {
+    value
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(str::to_owned)
+}
+
+fn new_invite_key() -> String {
+    Uuid::new_v4().simple().to_string()
 }
