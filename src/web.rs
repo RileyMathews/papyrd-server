@@ -36,6 +36,24 @@ pub fn app(state: AppState) -> Router {
             "/opds/publications/{id}",
             get(handlers::opds::publication_document),
         )
+        .route("/opdsv1", get(handlers::opds_v1::root))
+        .route(
+            "/opdsv1/publications",
+            get(handlers::opds_v1::publications_feed),
+        )
+        .route(
+            "/opdsv1/publications/recent",
+            get(handlers::opds_v1::recent_publications_feed),
+        )
+        .route("/opdsv1/authors", get(handlers::opds_v1::authors_feed))
+        .route(
+            "/opdsv1/authors/{author_key}",
+            get(handlers::opds_v1::author_publications_feed),
+        )
+        .route(
+            "/opdsv1/publications/{id}",
+            get(handlers::opds_v1::publication_document),
+        )
         .route("/books/{id}/cover", get(handlers::assets::cover_image))
         .route("/books/{id}/download", get(handlers::assets::download_epub))
         .route("/users/create", post(handlers::kosync::register))

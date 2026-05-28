@@ -87,8 +87,10 @@ The ingest container here is completely optional. If running you can drop epub f
 process the files and add the required metadata to the database before copying the file over to the primary storage directory.
 
 # OPDS
-The OPDS entrypoint for your server will be at the `/opds` path. So for example if your server is live at
+The OPDS v2 entrypoint for your server will be at the `/opds` path. So for example if your server is live at
 `https://papyrd.mydomain.com` then you should use `https://papyrd.mydomain.com/opds` in your client configurations.
+
+For older clients that only support OPDS v1, use the `/opdsv1` path instead.
 
 # Kosync
 To use the kosync server for progress syncing you should just configure kosync with the root domain of your server. i.e. `https://papyrd.mydomain.com`

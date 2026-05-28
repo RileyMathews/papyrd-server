@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entry xmlns="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/terms/">
+  <title>{{ publication.title }}</title>
+  <id>{{ publication.atom_id }}</id>
+  <updated>{{ publication.updated }}</updated>
+{% for author in publication.authors %}
+  <author>
+    <name>{{ author }}</name>
+  </author>
+{% endfor %}
+  <dc:identifier>{{ publication.source_identifier }}</dc:identifier>
+{% for contributor in publication.contributors %}
+  <contributor>
+    <name>{{ contributor }}</name>
+  </contributor>
+{% endfor %}
+{% match publication.self_href %}
+{% when Some with (href) %}
+  <link rel="self" href="{{ href }}" type="{{ entry_media_type }}"/>
+{% when None %}
+{% endmatch %}
+{% match publication.cover_href %}
+{% when Some with (href) %}
+  <link rel="{{ image_rel }}" href="{{ href }}" type="{{ publication.cover_media_type }}"/>
+  <link rel="{{ thumbnail_rel }}" href="{{ href }}" type="{{ publication.cover_media_type }}"/>
+{% when None %}
+{% endmatch %}
+{% match publication.acquisition_href %}
+{% when Some with (href) %}
+  <link rel="{{ acquisition_rel }}" href="{{ href }}" type="application/epub+zip"/>
+{% when None %}
+{% endmatch %}
+</entry>

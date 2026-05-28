@@ -6,4 +6,5 @@ pub mod books;
 pub mod kosync;
 pub mod nav;
 pub mod opds;
+pub mod opds_v1;
 pub mod upload;

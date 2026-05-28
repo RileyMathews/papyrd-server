@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/terms/">
+  <id>{{ id }}</id>
+  <link rel="self" href="{{ self_href }}" type="{{ acquisition_feed_media_type }}"/>
+  <link rel="start" href="/opdsv1" type="{{ navigation_feed_media_type }}"/>
+  <link rel="up" href="/opdsv1" type="{{ navigation_feed_media_type }}"/>
+{% match previous_href %}
+{% when Some with (href) %}
+  <link rel="previous" href="{{ href }}" type="{{ acquisition_feed_media_type }}"/>
+{% when None %}
+{% endmatch %}
+{% match next_href %}
+{% when Some with (href) %}
+  <link rel="next" href="{{ href }}" type="{{ acquisition_feed_media_type }}"/>
+{% when None %}
+{% endmatch %}
+  <title>{{ title }}</title>
+  <updated>{{ updated }}</updated>
+  <author>
+    <name>Papyrd</name>
+  </author>
+{% for publication in publications %}
+  <entry>
+    <title>{{ publication.title }}</title>
+    <id>{{ publication.atom_id }}</id>
+    <updated>{{ publication.updated }}</updated>
+{% for author in publication.authors %}
+    <author>
+      <name>{{ author }}</name>
+    </author>
+{% endfor %}
+    <dc:identifier>{{ publication.source_identifier }}</dc:identifier>
+{% match publication.alternate_href %}
+{% when Some with (href) %}
+    <link rel="alternate" href="{{ href }}" type="{{ entry_media_type }}" title="{{ publication.alternate_title }}"/>
+{% when None %}
+{% endmatch %}
+{% match publication.cover_href %}
+{% when Some with (href) %}
+    <link rel="{{ image_rel }}" href="{{ href }}" type="{{ publication.cover_media_type }}"/>
+    <link rel="{{ thumbnail_rel }}" href="{{ href }}" type="{{ publication.cover_media_type }}"/>
+{% when None %}
+{% endmatch %}
+{% match publication.acquisition_href %}
+{% when Some with (href) %}
+    <link rel="{{ acquisition_rel }}" href="{{ href }}" type="application/epub+zip"/>
+{% when None %}
+{% endmatch %}
+  </entry>
+{% endfor %}
+</feed>

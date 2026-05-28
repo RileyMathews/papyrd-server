@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/terms/">
+  <id>{{ id }}</id>
+  <link rel="self" href="{{ self_href }}" type="{{ navigation_feed_media_type }}"/>
+  <link rel="start" href="/opdsv1" type="{{ navigation_feed_media_type }}"/>
+  <title>{{ title }}</title>
+  <updated>{{ updated }}</updated>
+  <author>
+    <name>Papyrd</name>
+  </author>
+{% for entry in entries %}
+  <entry>
+    <title>{{ entry.title }}</title>
+    <link rel="{{ entry.rel }}" href="{{ entry.href }}" type="{{ entry.media_type }}" title="{{ entry.title }}"/>
+    <updated>{{ updated }}</updated>
+    <id>{{ entry.id }}</id>
+    <content type="text">{{ entry.content }}</content>
+  </entry>
+{% endfor %}
+</feed>
