@@ -72,16 +72,18 @@ pub async fn signup_form(
         StatusCode::OK
     };
 
-    render_signup(
-        status,
-        "",
-        None,
-        signup_availability.signup_closed,
-        signup_availability.initial_setup,
-        invite_key.as_deref(),
-        signup_availability.invite_unlocked,
-        signup_availability.signup_closed && invite_key.is_some(),
-    )
+    let html = SignupTemplate {
+        username: "",
+        error: None,
+        signup_closed: signup_availability.signup_closed,
+        initial_setup: signup_availability.initial_setup,
+        invite_key: invite_key.as_deref(),
+        invite_unlocked: signup_availability.invite_unlocked,
+        invalid_invite: signup_availability.signup_closed && invite_key.is_some(),
+    }
+    .render()?;
+
+    Ok((status, Html(html)).into_response())
 }
 
 pub async fn signup(
@@ -96,60 +98,68 @@ pub async fn signup(
     let invite_key = normalize_invite_key(form.invite.as_deref());
     let signup_availability = signup_availability(&state, invite_key.as_deref()).await?;
     if signup_availability.signup_closed {
-        return render_signup(
-            StatusCode::FORBIDDEN,
-            "",
-            None,
-            true,
-            signup_availability.initial_setup,
-            invite_key.as_deref(),
-            false,
-            invite_key.is_some(),
-        );
+        let html = SignupTemplate {
+            username: "",
+            error: None,
+            signup_closed: true,
+            initial_setup: signup_availability.initial_setup,
+            invite_key: invite_key.as_deref(),
+            invite_unlocked: false,
+            invalid_invite: invite_key.is_some(),
+        }
+        .render()?;
+
+        return Ok((StatusCode::FORBIDDEN, Html(html)).into_response());
     }
 
     let username = form.username.trim();
     let password = form.password.trim();
     let Some(normalized_username) = auth::normalize_username(username) else {
-        return render_signup(
-            StatusCode::OK,
+        let html = SignupTemplate {
             username,
-            Some("Username is required."),
-            false,
-            signup_availability.initial_setup,
-            invite_key.as_deref(),
-            signup_availability.invite_unlocked,
-            false,
-        );
+            error: Some("Username is required."),
+            signup_closed: false,
+            initial_setup: signup_availability.initial_setup,
+            invite_key: invite_key.as_deref(),
+            invite_unlocked: signup_availability.invite_unlocked,
+            invalid_invite: false,
+        }
+        .render()?;
+
+        return Ok(Html(html).into_response());
     };
 
     if password.is_empty() {
-        return render_signup(
-            StatusCode::OK,
+        let html = SignupTemplate {
             username,
-            Some("Password is required."),
-            false,
-            signup_availability.initial_setup,
-            invite_key.as_deref(),
-            signup_availability.invite_unlocked,
-            false,
-        );
+            error: Some("Password is required."),
+            signup_closed: false,
+            initial_setup: signup_availability.initial_setup,
+            invite_key: invite_key.as_deref(),
+            invite_unlocked: signup_availability.invite_unlocked,
+            invalid_invite: false,
+        }
+        .render()?;
+
+        return Ok(Html(html).into_response());
     }
 
     if users::find_user_by_normalized_username(state.db(), &normalized_username)
         .await?
         .is_some()
     {
-        return render_signup(
-            StatusCode::OK,
+        let html = SignupTemplate {
             username,
-            Some("That username is already taken."),
-            false,
-            signup_availability.initial_setup,
-            invite_key.as_deref(),
-            signup_availability.invite_unlocked,
-            false,
-        );
+            error: Some("That username is already taken."),
+            signup_closed: false,
+            initial_setup: signup_availability.initial_setup,
+            invite_key: invite_key.as_deref(),
+            invite_unlocked: signup_availability.invite_unlocked,
+            invalid_invite: false,
+        }
+        .render()?;
+
+        return Ok(Html(html).into_response());
     }
 
     let password_hash = auth::hash_password(password)?;
@@ -166,16 +176,18 @@ pub async fn signup(
         .map(Some)
     } else if signup_availability.invite_unlocked {
         let Some(invite_key) = invite_key.as_deref() else {
-            return render_signup(
-                StatusCode::FORBIDDEN,
+            let html = SignupTemplate {
                 username,
-                None,
-                true,
-                false,
-                None,
-                false,
-                false,
-            );
+                error: None,
+                signup_closed: true,
+                initial_setup: false,
+                invite_key: None,
+                invite_unlocked: false,
+                invalid_invite: false,
+            }
+            .render()?;
+
+            return Ok((StatusCode::FORBIDDEN, Html(html)).into_response());
         };
 
         create_invited_user(
@@ -202,28 +214,37 @@ pub async fn signup(
     let created = match created_result {
         Ok(Some(created)) => created,
         Ok(None) => {
-            return render_signup(
-                StatusCode::FORBIDDEN,
+            let html = SignupTemplate {
                 username,
-                Some("This invite link is no longer available."),
-                true,
-                false,
-                invite_key.as_deref(),
-                false,
-                true,
-            );
+                error: Some("This invite link is no longer available."),
+                signup_closed: true,
+                initial_setup: false,
+                invite_key: invite_key.as_deref(),
+                invite_unlocked: false,
+                invalid_invite: true,
+            }
+            .render()?;
+
+            return Ok((StatusCode::FORBIDDEN, Html(html)).into_response());
         }
-        Err(error) if is_unique_violation(&error) => {
-            return render_signup(
-                StatusCode::OK,
+        Err(error)
+            if matches!(
+                &error,
+                SqlxError::Database(database_error) if database_error.is_unique_violation()
+            ) =>
+        {
+            let html = SignupTemplate {
                 username,
-                Some("That username is already taken."),
-                false,
-                signup_availability.initial_setup,
-                invite_key.as_deref(),
-                signup_availability.invite_unlocked,
-                false,
-            );
+                error: Some("That username is already taken."),
+                signup_closed: false,
+                initial_setup: signup_availability.initial_setup,
+                invite_key: invite_key.as_deref(),
+                invite_unlocked: signup_availability.invite_unlocked,
+                invalid_invite: false,
+            }
+            .render()?;
+
+            return Ok(Html(html).into_response());
         }
         Err(error) => return Err(error.into()),
     };
@@ -240,7 +261,13 @@ pub async fn signin_form(
         return Ok(Redirect::to("/").into_response());
     }
 
-    render_signin("", None)
+    let html = SigninTemplate {
+        username: "",
+        error: None,
+    }
+    .render()?;
+
+    Ok(Html(html).into_response())
 }
 
 pub async fn signin(
@@ -251,21 +278,45 @@ pub async fn signin(
     let username = form.username.trim();
     let password = form.password.trim();
     let Some(normalized_username) = auth::normalize_username(username) else {
-        return render_signin(username, Some("Enter your username."));
+        let html = SigninTemplate {
+            username,
+            error: Some("Enter your username."),
+        }
+        .render()?;
+
+        return Ok(Html(html).into_response());
     };
 
     if password.is_empty() {
-        return render_signin(username, Some("Enter your password."));
+        let html = SigninTemplate {
+            username,
+            error: Some("Enter your password."),
+        }
+        .render()?;
+
+        return Ok(Html(html).into_response());
     }
 
     let Some(stored_user) =
         users::find_user_by_normalized_username(state.db(), &normalized_username).await?
     else {
-        return render_signin(username, Some("Invalid username or password."));
+        let html = SigninTemplate {
+            username,
+            error: Some("Invalid username or password."),
+        }
+        .render()?;
+
+        return Ok(Html(html).into_response());
     };
 
     if !auth::verify_password(password, &stored_user.password_hash)? {
-        return render_signin(username, Some("Invalid username or password."));
+        let html = SigninTemplate {
+            username,
+            error: Some("Invalid username or password."),
+        }
+        .render()?;
+
+        return Ok(Html(html).into_response());
     }
 
     let jar = auth::sign_in_jar(jar, stored_user.user.id, state.session_cookie_secure());
@@ -355,49 +406,9 @@ async fn create_invited_user(
     Ok(Some(created))
 }
 
-fn render_signup(
-    status: StatusCode,
-    username: &str,
-    error: Option<&str>,
-    signup_closed: bool,
-    initial_setup: bool,
-    invite_key: Option<&str>,
-    invite_unlocked: bool,
-    invalid_invite: bool,
-) -> Result<Response, AppError> {
-    let html = SignupTemplate {
-        username,
-        error,
-        signup_closed,
-        initial_setup,
-        invite_key,
-        invite_unlocked,
-        invalid_invite,
-    }
-    .render()?;
-
-    if status == StatusCode::OK {
-        Ok(Html(html).into_response())
-    } else {
-        Ok((status, Html(html)).into_response())
-    }
-}
-
 fn normalize_invite_key(value: Option<&str>) -> Option<String> {
     value
         .map(str::trim)
         .filter(|value| !value.is_empty())
         .map(str::to_owned)
-}
-
-fn render_signin(username: &str, error: Option<&str>) -> Result<Response, AppError> {
-    let html = SigninTemplate { username, error }.render()?;
-    Ok(Html(html).into_response())
-}
-
-fn is_unique_violation(error: &SqlxError) -> bool {
-    match error {
-        SqlxError::Database(database_error) => database_error.is_unique_violation(),
-        _ => false,
-    }
 }
