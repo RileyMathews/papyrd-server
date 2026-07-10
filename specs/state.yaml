@@ -1,1 +1,12 @@
 workflow_mode: solo-git
+active_flow: plan_work
+active_epic_id: e01
+active_story_id: e01s01
+handoff:
+  next_skill: develop-tdd
+  summary: >
+    10-task plan for Pico CSS restyle.
+    Tasks cover: download CSS, rewrite layout + nav + 10 page templates,
+    minimal app.css, integration check.
+metrics:
+  story_start: "2026-07-09T18:15:00Z"

@@ -1,0 +1,35 @@
+feature_name: "Pico CSS restyle"
+problem_statement: |
+  Papyrd uses ~500 lines of bespoke dark-theme CSS
+  across 10 HTML templates. A class-light semantic
+  framework would cut CSS maintenance and make markup
+  more readable, preserving current look.
+constraints:
+  - "No CDN — Pico CSS files self-hosted in static/"
+  - "No Rust handler or template logic changes"
+  - "OPDS XML templates untouched"
+  - "Must render correctly offline (no internet access)"
+out_of_scope:
+  - "OPDS XML templates (opds_v1/*.xml)"
+  - "Rust handlers, routes, database"
+  - "Interactive JS features"
+  - "Dark/light mode toggle (OS preference only for now)"
+key_decisions:
+  - decision: "Use Pico CSS v2 class-light variant"
+    rationale: >
+      Preserves .container and .grid for layout control
+      while auto-styling native elements
+  - decision: "Self-host Pico CSS files (no CDN)"
+    rationale: "Project must work offline in self-hosted homelab environments"
+  - decision: "Include pico.colors.min.css for color utilities"
+    rationale: "Needed for status badges, sync indicators, upload result colors"
+  - decision: >
+      Dark/light mode follows OS preference via
+      <meta name=color-scheme>
+    rationale: "Zero-effort dark mode support; toggle can be added later"
+  - decision: >
+      Keep minimal app.css for Pico-unmatched visuals
+      (cover fallback, card layout)
+    rationale: >
+      Cover cards and fallback gradients have no
+      native Pico equivalent

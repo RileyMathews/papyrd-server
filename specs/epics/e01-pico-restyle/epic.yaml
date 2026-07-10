@@ -1,0 +1,10 @@
+id: e01
+slug: pico-restyle
+title: "Pico CSS restyle"
+status: planned
+started_at:
+completed_at:
+stories:
+  - id: e01s01
+    title: "Restyle all HTML templates with Pico CSS"
+    bcps: 2

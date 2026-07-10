@@ -1,0 +1,81 @@
+story_id: e01s01
+title: "Restyle all HTML templates with Pico CSS"
+status: passing
+bcps: 2
+tasks:
+  - id: 1
+    description: >
+      Download Pico CSS v2 (pico.min.css + pico.colors.min.css)
+      into static/ directory
+    verify: "test -f static/pico.min.css && test -f static/pico.colors.min.css"
+    risk: P3
+    status: passing
+
+  - id: 2
+    description: >
+      Rewrite layout.html for Pico: add color-scheme meta,
+      link pico CSS files + app.css, use semantic header/main layout
+    verify: "cargo build 2>&1"
+    risk: P2
+    status: passing
+
+  - id: 3
+    description: >
+      Rewrite partials/app_nav.html using Pico nav pattern
+      (<nav><ul><li><a>) with sign-out form
+    verify: "cargo build 2>&1"
+    risk: P2
+    status: passing
+
+  - id: 4
+    description: >
+      Rewrite books.html and book_detail.html with Pico-semantic HTML
+      (article, .grid for cards, forms for actions), add cover fallback CSS
+    verify: "cargo build 2>&1"
+    risk: P2
+    status: passing
+
+  - id: 5
+    description: >
+      Rewrite authors.html and author_detail.html with Pico-semantic HTML
+    verify: "cargo build 2>&1"
+    risk: P2
+    status: passing
+
+  - id: 6
+    description: >
+      Rewrite signin.html and signup.html with Pico form styling
+    verify: "cargo build 2>&1"
+    risk: P2
+    status: passing
+
+  - id: 7
+    description: >
+      Rewrite upload.html with Pico form + file input + upload results
+    verify: "cargo build 2>&1"
+    risk: P2
+    status: passing
+
+  - id: 8
+    description: >
+      Rewrite admin_users.html, admin_user_permissions.html,
+      and admin_invites.html with Pico-semantic HTML
+    verify: "cargo build 2>&1"
+    risk: P2
+    status: passing
+
+  - id: 9
+    description: >
+      Write minimal app.css: cover card grid layout,
+      cover fallback gradient, color badge overrides only
+    verify: "cargo build 2>&1"
+    risk: P2
+    status: passing
+
+  - id: 10
+    description: >
+      Integration check: cargo test && cargo build,
+      verify all tests pass with new templates
+    verify: "cargo test 2>&1 && cargo build 2>&1"
+    risk: P1
+    status: passing
