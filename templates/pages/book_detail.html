@@ -3,10 +3,10 @@
 {% block content %}
 
 <!-- ── Toolbar ── -->
-<nav class="book-detail-toolbar">
-  <a href="/books" class="book-detail-back">← Back to books</a>
+<nav class="detail-toolbar">
+  <a href="/books" class="detail-back">← Back to books</a>
 
-  <div class="book-detail-actions">
+  <div class="detail-actions">
     {% if let Some(epub_path) = publication.epub_path %}
     <a href="/books/{{ publication.id }}/download" role="button"
       >Download EPUB</a
@@ -15,7 +15,7 @@
     <form
       method="post"
       action="/books/{{ publication.id }}/delete"
-      class="book-detail-delete-form"
+      class="detail-delete-form"
       id="delete-form"
     >
       <button type="button" class="outline contrast" id="delete-btn">
@@ -65,7 +65,7 @@
     </dl>
 
     <!-- ── Sync progress ── -->
-    <section class="sync-progress">
+    <article>
       <h3>
         Reading progress {% if sync_status.synced %}
         <span class="sync-progress-pct">{{ sync_status.percentage }}</span>
@@ -74,9 +74,8 @@
 
       {% if sync_status.synced %}
       <progress
-        class="sync-progress-bar"
         max="100"
-        data-pct="{{ sync_status.percentage }}"
+        value="{{ sync_status.percentage }}"
       >
         {{ sync_status.percentage }}
       </progress>
@@ -98,7 +97,7 @@
         <small>No KOReader progress has been synced for this book yet.</small>
       </p>
       {% endif %}
-    </section>
+    </article>
   </div>
 </div>
 
@@ -120,8 +119,7 @@
 
 <script>
   (() => {
-    const bar = document.querySelector(".sync-progress-bar");
-    if (bar) bar.value = parseFloat(bar.dataset.pct);
+
 
     const deleteBtn = document.getElementById("delete-btn");
     const confirmDialog = document.getElementById("confirm-delete");

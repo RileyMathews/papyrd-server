@@ -8,6 +8,48 @@ main.container {
 	container-name: main-content;
 }
 
+/* ── Page header — title + optional action button ── */
+.page-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+/* ── Detail toolbar — back link + action buttons ── */
+.detail-toolbar {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	margin-bottom: 2rem;
+	padding-bottom: 1rem;
+	border-bottom: 1px solid var(--pico-muted-border-color);
+}
+
+.detail-back {
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.detail-actions {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+.detail-actions a[role="button"],
+.detail-actions button {
+	margin-bottom: 0;
+}
+
+.detail-delete-form {
+	margin: 0;
+	line-height: 0;
+}
+
 /* ── Book grid ── */
 .book-grid {
 	display: flex;
@@ -45,7 +87,9 @@ main.container {
 
 /* Spine lighting — layered highlights and shadows simulating
    the curved spine and page edges of a hardcover */
-.book-cover::before {
+.book-cover::before,
+.author-cover-item::before,
+.book-detail-cover::before {
 	content: "";
 	position: absolute;
 	inset: 0;
@@ -109,27 +153,40 @@ main.container {
 	letter-spacing: 0.08em;
 }
 
-/* ── Author title header ── */
-.author-title-header {
-	margin-bottom: 2.5rem;
-	padding-bottom: 1.5rem;
-	border-bottom: 1px solid var(--pico-muted-border-color);
+/* ── Book card text ── */
+.book-card hgroup {
+	margin-top: 0.7rem;
 }
 
-.author-title-header hgroup {
-	margin-bottom: 0;
+.book-card hgroup a {
+	text-decoration: none;
+	color: inherit;
 }
 
-.author-title-header h1 {
-	margin-bottom: 0.3rem;
-	font-size: 2rem;
-	letter-spacing: -0.02em;
+.book-card hgroup a:hover {
+	text-decoration: underline;
 }
 
-.author-title-header p {
+.book-card hgroup h3 {
 	margin: 0;
-	font-size: 1.05rem;
-	color: var(--pico-muted-color);
+	font-size: 1rem;
+	line-height: 1.2;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	overflow: hidden;
+	max-height: calc(2 * 1.2em);
+}
+
+.book-card hgroup p {
+	margin: 0.15rem 0 0;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	overflow: hidden;
+	max-height: calc(2 * 1.2em);
 }
 
 /* ── Author list ── */
@@ -231,102 +288,6 @@ main.container {
 	border-radius: 0 6px 6px 0;
 }
 
-/* Spine lighting — same hardcover look as book cards, no hover */
-.author-cover-item::before {
-	content: "";
-	position: absolute;
-	inset: 0;
-	background-image: linear-gradient(
-		to right,
-		rgba(0, 0, 0, 0.02) 0%,
-		rgba(0, 0, 0, 0.06) 0.75%,
-		rgba(255, 255, 255, 0.5) 1%,
-		rgba(255, 255, 255, 0.6) 1.3%,
-		rgba(255, 255, 255, 0.5) 1.4%,
-		rgba(255, 255, 255, 0.3) 1.5%,
-		rgba(255, 255, 255, 0.3) 2.4%,
-		rgba(0, 0, 0, 0.05) 2.7%,
-		rgba(0, 0, 0, 0.05) 3.5%,
-		rgba(255, 255, 255, 0.3) 4%,
-		rgba(255, 255, 255, 0.3) 4.5%,
-		rgba(255, 255, 255, 0.1) 5.4%,
-		rgba(255, 255, 255, 0.1) 99%,
-		rgba(144, 144, 144, 0.2) 100%
-	);
-	border-radius: 0 6px 6px 0;
-	pointer-events: none;
-	z-index: 1;
-}
-
-/* ── Book card text ── */
-.book-card hgroup {
-	margin-top: 0.7rem;
-}
-
-.book-card hgroup a {
-	text-decoration: none;
-	color: inherit;
-}
-
-.book-card hgroup a:hover {
-	text-decoration: underline;
-}
-
-.book-card hgroup h3 {
-	margin: 0;
-	font-size: 1rem;
-	line-height: 1.2;
-	display: -webkit-box;
-	-webkit-box-orient: vertical;
-	-webkit-line-clamp: 2;
-	line-clamp: 2;
-	overflow: hidden;
-	max-height: calc(2 * 1.2em);
-}
-
-.book-card hgroup p {
-	margin: 0.15rem 0 0;
-	display: -webkit-box;
-	-webkit-box-orient: vertical;
-	-webkit-line-clamp: 2;
-	line-clamp: 2;
-	overflow: hidden;
-	max-height: calc(2 * 1.2em);
-}
-
-/* ── Book detail toolbar ── */
-.book-detail-toolbar {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: 0.75rem;
-	margin-bottom: 2rem;
-	padding-bottom: 1rem;
-	border-bottom: 1px solid var(--pico-muted-border-color);
-}
-
-.book-detail-back {
-	font-weight: 600;
-	text-decoration: none;
-}
-
-.book-detail-actions {
-	display: flex;
-	gap: 0.5rem;
-	align-items: center;
-}
-
-.book-detail-actions a[role="button"],
-.book-detail-actions button {
-	margin-bottom: 0;
-}
-
-.book-detail-delete-form {
-	margin: 0;
-	line-height: 0;
-}
-
 /* ── Book detail grid ── */
 .book-detail-grid {
 	display: grid;
@@ -357,32 +318,6 @@ main.container {
 	box-shadow:
 		inset 0 -1px 4px rgba(0, 0, 0, 0.12),
 		2px 4px 16px rgba(0, 0, 0, 0.2);
-}
-
-.book-detail-cover::before {
-	content: "";
-	position: absolute;
-	inset: 0;
-	background-image: linear-gradient(
-		to right,
-		rgba(0, 0, 0, 0.02) 0%,
-		rgba(0, 0, 0, 0.06) 0.75%,
-		rgba(255, 255, 255, 0.5) 1%,
-		rgba(255, 255, 255, 0.6) 1.3%,
-		rgba(255, 255, 255, 0.5) 1.4%,
-		rgba(255, 255, 255, 0.3) 1.5%,
-		rgba(255, 255, 255, 0.3) 2.4%,
-		rgba(0, 0, 0, 0.05) 2.7%,
-		rgba(0, 0, 0, 0.05) 3.5%,
-		rgba(255, 255, 255, 0.3) 4%,
-		rgba(255, 255, 255, 0.3) 4.5%,
-		rgba(255, 255, 255, 0.1) 5.4%,
-		rgba(255, 255, 255, 0.1) 99%,
-		rgba(144, 144, 144, 0.2) 100%
-	);
-	border-radius: 0 6px 6px 0;
-	pointer-events: none;
-	z-index: 1;
 }
 
 .book-detail-cover img {
@@ -437,17 +372,13 @@ main.container {
 	margin: 0.25rem 0 0;
 }
 
-/* ── Sync progress ── */
+/* ── Sync progress — uses Pico progress element natively ── */
 .sync-progress {
 	margin-top: 1.5rem;
-	padding: 1.25rem 1.5rem;
-	border: 1px solid var(--pico-muted-border-color);
-	border-radius: 8px;
-	background: var(--pico-card-background-color);
 }
 
 .sync-progress h3 {
-	margin: 0 0 1rem;
+	margin: 0 0 0.75rem;
 	font-size: 1rem;
 	display: flex;
 	align-items: baseline;
@@ -460,39 +391,8 @@ main.container {
 	font-size: 0.875rem;
 }
 
-.sync-progress-bar {
-	width: 100%;
-	max-width: 100%;
-	height: 0.75rem;
-	margin-bottom: 1rem;
-	border-radius: 6px;
-	overflow: hidden;
-	appearance: none;
-	border: none;
-	background: var(--pico-muted-border-color);
-}
-
-.sync-progress-bar::-webkit-progress-bar {
-	background: var(--pico-muted-border-color);
-	border-radius: 6px;
-}
-
-.sync-progress-bar::-webkit-progress-value {
-	background: var(--pico-primary);
-	border-radius: 6px;
-}
-
-.sync-progress-bar::-moz-progress-bar {
-	background: var(--pico-primary);
-	border-radius: 6px;
-}
-
 .sync-progress-meta {
-	margin: 0 0 0;
-}
-
-.sync-progress :last-child {
-	margin-bottom: 0;
+	margin: 1rem 0 0;
 }
 
 .sync-progress-meta dt {

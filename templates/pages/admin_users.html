@@ -2,9 +2,13 @@
 block header_nav %} {% include "partials/app_nav.html" %} {% endblock %} {%
 block content %}
 <section>
-  <h1>Users</h1>
-  <p>View server users and manage their permissions.</p>
+  <hgroup>
+    <h1>Users</h1>
+    <p>View server users and manage their permissions.</p>
+  </hgroup>
 </section>
+
+<hr />
 
 {% for user in users %}
 <article>

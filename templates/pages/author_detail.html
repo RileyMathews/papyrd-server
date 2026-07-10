@@ -2,11 +2,11 @@
 block header_nav %} {% include "partials/app_nav.html" %} {% endblock %} {%
 block content %}
 <!-- ── Toolbar ── -->
-<nav class="book-detail-toolbar">
-  <a href="/authors" class="book-detail-back">← Back to all authors</a>
+<nav class="detail-toolbar">
+  <a href="/authors" class="detail-back">← Back to all authors</a>
 </nav>
 
-<section class="author-title-header">
+<section>
   <hgroup>
     <h1>{{ author_name }}</h1>
     <p>
@@ -15,6 +15,8 @@ block content %}
     </p>
   </hgroup>
 </section>
+
+<hr />
 
 {% if publications.len() == 0 %}
 <section>

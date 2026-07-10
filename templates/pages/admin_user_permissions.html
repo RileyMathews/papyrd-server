@@ -1,13 +1,19 @@
 {% extends "layout.html" %} {% block title %}Permissions for {{ user.username }}
 | Papyrd{% endblock %} {% block header_nav %} {% include "partials/app_nav.html"
 %} {% endblock %} {% block content %}
-<a href="/admin/users">← Back to users</a>
+<!-- ── Toolbar ── -->
+<nav class="detail-toolbar">
+  <a href="/admin/users" class="detail-back">← Back to users</a>
+</nav>
 
-<article>
+<section>
   <hgroup>
     <h1>{{ user.username }}</h1>
     <p>User permissions</p>
   </hgroup>
+</section>
+
+<article>
   <p>Select which code-defined permissions this user should have.</p>
 
   {% if saved %}
