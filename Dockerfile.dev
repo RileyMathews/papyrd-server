@@ -1,0 +1,18 @@
+# Dev Dockerfile — single stage, includes migrations at runtime
+FROM rust:1-bookworm
+
+WORKDIR /app
+
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
+COPY templates ./templates
+COPY static ./static
+COPY migrations ./migrations
+
+RUN cargo build --release --locked --bins
+
+ENV PAPYRD_BIND_ADDRESS=0.0.0.0:3000
+
+EXPOSE 3000
+
+CMD ["cargo", "run", "--release", "--bin", "papyrd"]
