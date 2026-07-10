@@ -51,7 +51,7 @@ struct AdminInvitesTemplate {
 }
 
 struct PermissionOptionView {
-    input_id: String,
+    _input_id: String,
     value: &'static str,
     label: &'static str,
     description: &'static str,
@@ -241,7 +241,7 @@ fn permission_options(active_permissions: &[Permission]) -> Vec<PermissionOption
         .copied()
         .enumerate()
         .map(|(index, permission)| PermissionOptionView {
-            input_id: format!("permission-{index}"),
+            _input_id: format!("permission-{index}"),
             value: permission.as_str(),
             label: permission.label(),
             description: permission.description(),
