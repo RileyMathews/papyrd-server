@@ -1,99 +1,149 @@
-{% extends "layout.html" %}
-
-{% block title %}{{ publication.title }}{% endblock %}
-
-{% block header_nav %}
-{% include "partials/app_nav.html" %}
-{% endblock %}
-
+{% extends "layout.html" %} {% block title %}{{ publication.title }}{% endblock
+%} {% block header_nav %} {% include "partials/app_nav.html" %} {% endblock %}
 {% block content %}
-<section class="detail-page">
-  <a class="back-link" href="/books">Back to all books</a>
 
-  <article class="surface-panel detail-card">
-    <div class="media">
-      {% match publication.cover_image_path %}
-      {% when Some with (cover_image_path) %}
-      <img class="cover" src="/books/{{ publication.id }}/cover" alt="Cover for {{ publication.title }}">
-      {% when None %}
-      <div class="cover -fallback" aria-hidden="true">
-        <span class="initial">{{ publication.title_initial }}</span>
-      </div>
-      {% endmatch %}
+<!-- ── Toolbar ── -->
+<nav class="book-detail-toolbar">
+  <a href="/books" class="book-detail-back">← Back to books</a>
+
+  <div class="book-detail-actions">
+    {% if let Some(epub_path) = publication.epub_path %}
+    <a href="/books/{{ publication.id }}/download" role="button"
+      >Download EPUB</a
+    >
+    {% endif %} {% if nav.can_delete_publications %}
+    <form
+      method="post"
+      action="/books/{{ publication.id }}/delete"
+      class="book-detail-delete-form"
+      id="delete-form"
+    >
+      <button type="button" class="outline contrast" id="delete-btn">
+        Delete book
+      </button>
+    </form>
+    {% endif %}
+  </div>
+</nav>
+
+<!-- ── Book details ── -->
+<div class="book-detail-grid">
+  <div class="book-detail-cover">
+    {% match publication.cover_image_path %} {% when Some with
+    (cover_image_path) %}
+    <img
+      src="/books/{{ publication.id }}/cover"
+      alt="Cover for {{ publication.title }}"
+    />
+    {% when None %}
+    <div class="cover-fallback-detail" aria-hidden="true">
+      <span>{{ publication.title_initial }}</span>
     </div>
+    {% endmatch %}
+  </div>
 
-    <div class="content">
-      <div class="page-intro">
-        <p class="kicker">Book detail</p>
-        <h1 class="title">{{ publication.title }}</h1>
-      </div>
+  <div class="book-detail-meta">
+    <h1>{{ publication.title }}</h1>
 
-      <dl class="meta-list">
-        <div class="row">
-          <dt class="term">Contributors</dt>
-          <dd class="description">
-            {% if publication.contributors.len() == 0 %}
-            No contributors listed
-            {% else %}
-            {% for contributor in publication.contributors %}
-            {{ contributor.name }}{{ contributor.role_suffix() }}{% if !loop.last %}, {% endif %}
-            {% endfor %}
-            {% endif %}
-          </dd>
-        </div>
-        <div class="row">
-          <dt class="term">Identifier</dt>
-          <dd class="description">{{ publication.source_identifier }}</dd>
-        </div>
-        {% if let Some(original_filename) = publication.original_filename %}
-        <div class="row">
-          <dt class="term">Uploaded file</dt>
-          <dd class="description">{{ original_filename }}</dd>
-        </div>
+    <dl>
+      <dt>Contributors</dt>
+      <dd>
+        {% if publication.contributors.len() == 0 %} No contributors listed {%
+        else %} {% for contributor in publication.contributors %}
+        <a href="/authors/{{ contributor.key() }}">{{ contributor.name }}</a>{{
+        contributor.role_suffix() }}{% if !loop.last %}, {% endif %} {% endfor
+        %} {% endif %}
+      </dd>
+
+      <dt>Identifier</dt>
+      <dd><code>{{ publication.source_identifier }}</code></dd>
+
+      {% if let Some(original_filename) = publication.original_filename %}
+      <dt>Uploaded file</dt>
+      <dd><code>{{ original_filename }}</code></dd>
+      {% endif %}
+    </dl>
+
+    <!-- ── Sync progress ── -->
+    <section class="sync-progress">
+      <h3>
+        Reading progress {% if sync_status.synced %}
+        <span class="sync-progress-pct">{{ sync_status.percentage }}</span>
         {% endif %}
+      </h3>
+
+      {% if sync_status.synced %}
+      <progress
+        class="sync-progress-bar"
+        max="100"
+        data-pct="{{ sync_status.percentage }}"
+      >
+        {{ sync_status.percentage }}
+      </progress>
+
+      <dl class="sync-progress-meta">
+        <dt>Locator</dt>
+        <dd>
+          <code><small>{{ sync_status.progress }}</small></code>
+        </dd>
+
+        <dt>Device</dt>
+        <dd>{{ sync_status.device }}</dd>
+
+        <dt>Last synced</dt>
+        <dd>{{ sync_status.updated_at }}</dd>
       </dl>
+      {% else %}
+      <p class="sync-empty">
+        <small>No KOReader progress has been synced for this book yet.</small>
+      </p>
+      {% endif %}
+    </section>
+  </div>
+</div>
 
-      <section class="sync-panel" aria-labelledby="sync-status-title">
-        <div class="heading">
-          <h2 class="title" id="sync-status-title">Sync status</h2>
-          {% if sync_status.synced %}
-          <span class="badge -synced">Synced</span>
-          {% else %}
-          <span class="badge">Not synced</span>
-          {% endif %}
-        </div>
-
-        {% if sync_status.synced %}
-        <dl class="meta-list -compact">
-          <div class="row">
-            <dt class="term">Progress</dt>
-            <dd class="description">{{ sync_status.percentage }} · {{ sync_status.progress }}</dd>
-          </div>
-          <div class="row">
-            <dt class="term">Device</dt>
-            <dd class="description">{{ sync_status.device }}</dd>
-          </div>
-          <div class="row">
-            <dt class="term">Last synced</dt>
-            <dd class="description">{{ sync_status.updated_at }}</dd>
-          </div>
-        </dl>
-        {% else %}
-        <p class="body">No KOReader progress has been synced for this book yet.</p>
-        {% endif %}
-      </section>
-
-      <div class="actions-row">
-        {% if let Some(epub_path) = publication.epub_path %}
-        <a class="action-button" href="/books/{{ publication.id }}/download">Download EPUB</a>
-        {% endif %}
-        {% if nav.can_delete_publications %}
-          <form method="post" action="/books/{{ publication.id }}/delete">
-            <button class="action-button -danger -compact" type="submit">Delete book</button>
-          </form>
-        {% endif %}
-      </div>
-    </div>
+<dialog id="confirm-delete">
+  <article>
+    <header>
+      <button aria-label="Close" rel="prev" id="confirm-cancel"></button>
+      <p><strong>Delete {{ publication.title }}</strong></p>
+    </header>
+    <p>
+      Are you sure you want to delete this book? This action cannot be undone.
+    </p>
+    <footer>
+      <button class="secondary" id="confirm-cancel-2">Cancel</button>
+      <button class="contrast" id="confirm-ok">Delete</button>
+    </footer>
   </article>
-</section>
+</dialog>
+
+<script>
+  (() => {
+    const bar = document.querySelector(".sync-progress-bar");
+    if (bar) bar.value = parseFloat(bar.dataset.pct);
+
+    const deleteBtn = document.getElementById("delete-btn");
+    const confirmDialog = document.getElementById("confirm-delete");
+    const deleteForm = document.getElementById("delete-form");
+
+    if (!deleteBtn || !confirmDialog) return;
+
+    const close = () => confirmDialog.close();
+
+    deleteBtn.addEventListener("click", () => confirmDialog.showModal());
+
+    document
+      .querySelectorAll("#confirm-cancel, #confirm-cancel-2")
+      .forEach((el) => el.addEventListener("click", close));
+
+    document
+      .getElementById("confirm-ok")
+      ?.addEventListener("click", () => deleteForm.submit());
+
+    confirmDialog.addEventListener("click", (e) => {
+      if (e.target === confirmDialog) close();
+    });
+  })();
+</script>
 {% endblock %}

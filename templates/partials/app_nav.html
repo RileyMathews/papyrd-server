@@ -1,14 +1,16 @@
-<a class="item{% if active_nav == "books" %} -current{% endif %}" href="/books">All books</a>
-<a class="item{% if active_nav == "authors" %} -current{% endif %}" href="/authors">Authors</a>
+<li><a href="/books" class="{% if active_nav == "books" %}contrast{% endif %}">Books</a></li>
+<li><a href="/authors" class="{% if active_nav == "authors" %}contrast{% endif %}">Authors</a></li>
 {% if nav.can_upload_publications %}
-<a class="item{% if active_nav == "upload" %} -current{% endif %}" href="/upload">Upload</a>
+<li><a href="/upload" class="{% if active_nav == "upload" %}contrast{% endif %}">Upload</a></li>
 {% endif %}
 {% if nav.can_edit_permissions %}
-<a class="item{% if active_nav == "admin" %} -current{% endif %}" href="/admin/users">Users</a>
+<li><a href="/admin/users" class="{% if active_nav == "admin" %}contrast{% endif %}">Users</a></li>
 {% endif %}
 {% if nav.can_invite_users %}
-<a class="item{% if active_nav == "invites" %} -current{% endif %}" href="/admin/invites">Invites</a>
+<li><a href="/admin/invites" class="{% if active_nav == "invites" %}contrast{% endif %}">Invites</a></li>
 {% endif %}
-<form class="form" method="post" action="/signout">
-  <button class="item item-button" type="submit">Sign out</button>
-</form>
+<li>
+  <form method="post" action="/signout">
+    <button type="submit" class="outline secondary">Sign out</button>
+  </form>
+</li>

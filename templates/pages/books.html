@@ -1,59 +1,66 @@
-{% extends "layout.html" %}
-
-{% block title %}All Books{% endblock %}
-
-{% block header_nav %}
-{% include "partials/app_nav.html" %}
-{% endblock %}
-
-{% block content %}
-<section class="catalog-page">
-  <div class="catalog-bar">
-    <div class="page-intro">
-      <p class="kicker">Shared catalog</p>
-      <h1 class="title">All books</h1>
-      <p class="body">
-        Browse the shared library or add a new EPUB to the catalog.
-      </p>
-    </div>
+{% extends "layout.html" %} {% block title %}Books{% endblock %} {% block
+header_nav %} {% include "partials/app_nav.html" %} {% endblock %} {% block
+content %}
+<section>
+  <div
+    style="
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    "
+  >
+    <hgroup>
+      <h1>Books</h1>
+      <p>Browse the shared library or add a new EPUB to the catalog.</p>
+    </hgroup>
     {% if nav.can_upload_publications %}
-    <a class="action-button" href="/upload">Upload a book</a>
+    <a href="/upload" role="button">Upload a book</a>
     {% endif %}
   </div>
-
-  {% if publications.len() == 0 %}
-  <section class="surface-panel empty-panel">
-    <div class="page-intro">
-      <p class="kicker">Nothing here yet</p>
-      <h2 class="title">Your catalog is empty.</h2>
-      <p class="body">
-        {% if nav.can_upload_publications %}Upload the first EPUB to create the shared library.{% else %}Books will appear here after someone with upload permission adds them.{% endif %}
-      </p>
-    </div>
-  </section>
-  {% else %}
-  <section class="book-grid">
-    {% for publication in publications %}
-    <article class="book-card">
-        <a class="link" href="/books/{{ publication.id }}">
-          {% match publication.cover_image_path %}
-          {% when Some with (cover_image_path) %}
-        <img class="cover" src="/books/{{ publication.id }}/cover" alt="Cover for {{ publication.title }}">
-          {% when None %}
-          <div class="cover -fallback" aria-hidden="true">
-            <span class="initial">{{ publication.title_initial }}</span>
-        </div>
-        {% endmatch %}
-
-        <div class="text">
-          <h2 class="title">{{ publication.title }}</h2>
-          <p class="author">{{ publication.contributors }}</p>
-          <p class="meta">{{ publication.source_identifier }}</p>
-        </div>
-      </a>
-    </article>
-    {% endfor %}
-  </section>
-  {% endif %}
 </section>
-{% endblock %}
+
+<hr />
+
+{% if publications.len() == 0 %}
+<section>
+  <h2>Nothing here yet</h2>
+  <p>
+    {% if nav.can_upload_publications %}Upload the first EPUB to create the
+    shared library.{% else %}Books will appear here after someone with upload
+    permission adds them.{% endif %}
+  </p>
+</section>
+{% else %}
+<div class="book-grid">
+  {% for publication in publications %}
+  <div class="book-card">
+    <a href="/books/{{ publication.id }}" class="book-cover">
+      {% match publication.cover_image_path %} {% when Some with
+      (cover_image_path) %}
+      <img
+        src="/books/{{ publication.id }}/cover"
+        alt="Cover for {{ publication.title }}"
+      />
+      {% when None %}
+      <div class="cover-fallback" aria-hidden="true">
+        <span>{{ publication.title_initial }}</span>
+      </div>
+      {% endmatch %}
+    </a>
+    <hgroup>
+      <a href="/books/{{ publication.id }}"><h3>{{ publication.title }}</h3></a>
+      <p>
+        <small>
+          {% for link in publication.contributor_links %} {% if !loop.first %},
+          {% endif %}
+          <a href="/authors/{{ link.key|urlencode }}">{{ link.name }}</a>
+          {% endfor %}
+        </small>
+      </p>
+    </hgroup>
+  </div>
+  {% endfor %}
+</div>
+{% endif %} {% endblock %}

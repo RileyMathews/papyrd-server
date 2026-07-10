@@ -1,60 +1,59 @@
-{% extends "layout.html" %}
+{% extends "layout.html" %} {% block title %}Upload{% endblock %} {% block
+header_nav %} {% include "partials/app_nav.html" %} {% endblock %} {% block
+content %}
+<article style="max-width: 38rem; margin: 2rem auto">
+  <hgroup>
+    <h1>Upload books</h1>
+    <p>EPUB ingestion</p>
+  </hgroup>
+  <p>
+    Upload one or more EPUB files with embedded title, author, and identifier
+    metadata. Duplicate identifiers are skipped.
+  </p>
 
-{% block title %}Upload{% endblock %}
+  {% if let Some(message) = error %}
+  <mark class="pico-background-red-100 pico-color-red-600">{{ message }}</mark>
+  {% endif %}
 
-{% block header_nav %}
-{% include "partials/app_nav.html" %}
-{% endblock %}
+  <form method="post" action="/upload" enctype="multipart/form-data">
+    <label>
+      EPUB files
+      <input
+        type="file"
+        name="epubs"
+        accept=".epub,application/epub+zip"
+        multiple
+      />
+    </label>
+    <button type="submit">Upload EPUBs</button>
+  </form>
 
-{% block content %}
-<section class="upload-page">
-  <div class="surface-panel form-panel">
-    <div class="page-intro">
-      <p class="kicker">EPUB ingestion</p>
-      <h1 class="title">Upload books</h1>
-      <p class="body">
-        Upload one or more EPUB files with embedded title, author, and identifier metadata. Duplicate identifiers are
-        skipped.
-      </p>
-    </div>
+  {% if let Some(summary) = summary %}
+  <section aria-live="polite" style="margin-top: 1.5rem">
+    <p>
+      <mark class="pico-background-jade-100 pico-color-jade-600"
+        >{{ summary.uploaded_count }} uploaded</mark
+      >
+      <mark class="pico-background-amber-100 pico-color-amber-600"
+        >{{ summary.duplicate_count }} duplicates</mark
+      >
+      <mark class="pico-background-red-100 pico-color-red-600"
+        >{{ summary.failed_count }} failed</mark
+      >
+    </p>
 
-    {% if let Some(message) = error %}
-    <p class="message-box -error">{{ message }}</p>
-    {% endif %}
-
-    <form class="form-stack" method="post" action="/upload" enctype="multipart/form-data">
-      <label class="form-field" for="epubs">
-        <span class="label">EPUB files</span>
-        <input class="input -file" id="epubs" name="epubs" type="file" accept=".epub,application/epub+zip" multiple>
-      </label>
-
-      <button class="action-button" type="submit">Upload EPUBs</button>
-    </form>
-
-    {% if let Some(summary) = summary %}
-    <section class="upload-results" aria-live="polite">
-      <div class="upload-summary">
-        <span><strong>{{ summary.uploaded_count }}</strong> uploaded</span>
-        <span><strong>{{ summary.duplicate_count }}</strong> duplicates</span>
-        <span><strong>{{ summary.failed_count }}</strong> failed</span>
-      </div>
-
-      <div class="upload-result-list">
-        {% for result in results %}
-        <article class="upload-result -{{ result.status_class }}">
-          <div class="upload-result-header">
-            <span class="status">{{ result.status_label }}</span>
-            <strong class="filename">{{ result.filename }}</strong>
-          </div>
-          {% if let Some(title) = result.title %}
-          <p class="result-title">{{ title }}</p>
-          {% endif %}
-          <p class="result-message">{{ result.message }}</p>
-        </article>
-        {% endfor %}
-      </div>
-    </section>
-    {% endif %}
-  </div>
-</section>
+    {% for result in results %}
+    <article>
+      <header>
+        <strong>{{ result.status_label }}</strong>: {{ result.filename }}
+      </header>
+      {% if let Some(title) = result.title %}
+      <p>{{ title }}</p>
+      {% endif %}
+      <p>{{ result.message }}</p>
+    </article>
+    {% endfor %}
+  </section>
+  {% endif %}
+</article>
 {% endblock %}

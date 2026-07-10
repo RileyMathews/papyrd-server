@@ -1,64 +1,71 @@
-{% extends "layout.html" %}
-
-{% block title %}Sign Up | Papyrd{% endblock %}
-
-{% block content %}
-<section class="auth-page">
-  <div class="surface-panel form-panel">
-    <div class="page-intro">
-      <p class="kicker">{% if signup_closed %}Signup closed{% else if initial_setup %}Admin setup{% else if invite_unlocked %}Invite accepted{% else %}Open signup{% endif %}</p>
-      <h1 class="title">{% if signup_closed %}Signups are closed{% else if initial_setup %}Create the server administrator{% else if invite_unlocked %}Create your invited account{% else %}Create a Papyrd account{% endif %}</h1>
-      {% if signup_closed %}
-      <p class="body">
-        {% if invalid_invite %}
-        This invitation is expired, revoked, or has already been used. Contact the server administrator for a new invitation.
-        {% else %}
-        This server is currently not accepting more signups. Contact the server administrator for an invitation.
-        {% endif %}
-      </p>
-      {% else if initial_setup %}
-      <p class="body">
-        No accounts exist yet. The first user to sign up will become the server administrator for this Papyrd server.
-      </p>
-      {% else if invite_unlocked %}
-      <p class="body">
-        Your invitation is valid. Create an account to join this Papyrd server.
-      </p>
-      {% else %}
-      <p class="body">
-        Accounts are shared across the household catalog. Pick a username you can sign in with later.
-      </p>
-      {% endif %}
-    </div>
-
-    {% if let Some(message) = error %}
-    <p class="message-box -error">{{ message }}</p>
-    {% endif %}
-
-    {% if !signup_closed %}
-    <form class="form-stack" method="post" action="/signup">
-      {% if let Some(invite_key) = invite_key %}
-      <input type="hidden" name="invite" value="{{ invite_key }}">
-      {% endif %}
-
-      <label class="form-field">
-        <span class="label">Username</span>
-        <input class="input" type="text" name="username" value="{{ username }}" autocomplete="username" required>
-      </label>
-
-      <label class="form-field">
-        <span class="label">Password</span>
-        <input class="input" type="password" name="password" autocomplete="new-password" required>
-      </label>
-
-      <button class="action-button" type="submit">Create account</button>
-    </form>
-    {% endif %}
-
-    <p class="support-copy">
-      Already have an account?
-      <a href="/signin">Sign in</a>
+{% extends "layout.html" %} {% block title %}Sign Up | Papyrd{% endblock %} {%
+block content %}
+<article style="max-width: 38rem; margin: 2rem auto">
+  <hgroup>
+    <h1>
+      {% if signup_closed %}Signups are closed {% else if initial_setup %}Create
+      the server administrator {% else if invite_unlocked %}Create your invited
+      account {% else %}Create a Papyrd account{% endif %}
+    </h1>
+    <p>
+      {% if signup_closed %}Signup closed {% else if initial_setup %}Admin setup
+      {% else if invite_unlocked %}Invite accepted {% else %}Open signup{% endif
+      %}
     </p>
-  </div>
-</section>
+  </hgroup>
+
+  {% if signup_closed %}
+  <p>
+    {% if invalid_invite %} This invitation is expired, revoked, or has already
+    been used. Contact the server administrator for a new invitation. {% else %}
+    This server is currently not accepting more signups. Contact the server
+    administrator for an invitation. {% endif %}
+  </p>
+  {% else if initial_setup %}
+  <p>
+    No accounts exist yet. The first user to sign up will become the server
+    administrator for this Papyrd server.
+  </p>
+  {% else if invite_unlocked %}
+  <p>Your invitation is valid. Create an account to join this Papyrd server.</p>
+  {% else %}
+  <p>
+    Accounts are shared across the household catalog. Pick a username you can
+    sign in with later.
+  </p>
+  {% endif %} {% if let Some(message) = error %}
+  <mark class="pico-background-red-100 pico-color-red-600">{{ message }}</mark>
+  {% endif %} {% if !signup_closed %}
+  <form method="post" action="/signup">
+    {% if let Some(invite_key) = invite_key %}
+    <input type="hidden" name="invite" value="{{ invite_key }}" />
+    {% endif %}
+    <label>
+      Username
+      <input
+        type="text"
+        name="username"
+        value="{{ username }}"
+        autocomplete="username"
+        required
+      />
+    </label>
+    <label>
+      Password
+      <input
+        type="password"
+        name="password"
+        autocomplete="new-password"
+        required
+      />
+    </label>
+    <button type="submit">Create account</button>
+  </form>
+  {% endif %}
+
+  <p>
+    Already have an account?
+    <a href="/signin">Sign in</a>
+  </p>
+</article>
 {% endblock %}

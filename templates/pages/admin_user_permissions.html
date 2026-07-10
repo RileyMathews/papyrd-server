@@ -1,45 +1,48 @@
-{% extends "layout.html" %}
+{% extends "layout.html" %} {% block title %}Permissions for {{ user.username }}
+| Papyrd{% endblock %} {% block header_nav %} {% include "partials/app_nav.html"
+%} {% endblock %} {% block content %}
+<a href="/admin/users">← Back to users</a>
 
-{% block title %}Permissions for {{ user.username }} | Papyrd{% endblock %}
+<article>
+  <hgroup>
+    <h1>{{ user.username }}</h1>
+    <p>User permissions</p>
+  </hgroup>
+  <p>Select which code-defined permissions this user should have.</p>
 
-{% block header_nav %}
-{% include "partials/app_nav.html" %}
-{% endblock %}
+  {% if saved %}
+  <mark class="pico-background-jade-100 pico-color-jade-600"
+    >Permissions saved.</mark
+  >
+  {% endif %}
 
-{% block content %}
-<section class="detail-page">
-  <a class="back-link" href="/admin/users">Back to users</a>
+  <form method="post" action="/admin/users/{{ user.id }}/permissions">
+    <fieldset>
+      <legend>Permissions</legend>
+      {% for permission in permission_options %}
+      <label>
+        <input
+          type="checkbox"
+          name="permissions"
+          value="{{ permission.value }}"
+          {%
+          if
+          permission.checked
+          %}
+          checked{%
+          endif
+          %}
+        />
+        {{ permission.label }}
+        <small>
+          {{ permission.description }}
+          <code>{{ permission.value }}</code>
+        </small>
+      </label>
+      {% endfor %}
+    </fieldset>
 
-  <div class="surface-panel permissions-panel">
-    <div class="page-intro">
-      <p class="kicker">User permissions</p>
-      <h1 class="title">{{ user.username }}</h1>
-      <p class="body">
-        Select which code-defined permissions this user should have.
-      </p>
-    </div>
-
-    {% if saved %}
-    <p class="message-box -success">Permissions saved.</p>
-    {% endif %}
-
-    <form class="form-stack" method="post" action="/admin/users/{{ user.id }}/permissions">
-      <fieldset class="permission-list">
-        <legend class="field-legend">Permissions</legend>
-        {% for permission in permission_options %}
-        <label class="permission-option" for="{{ permission.input_id }}">
-          <input id="{{ permission.input_id }}" type="checkbox" name="permissions" value="{{ permission.value }}"{% if permission.checked %} checked{% endif %}>
-          <span class="text">
-            <span class="label">{{ permission.label }}</span>
-            <span class="description">{{ permission.description }}</span>
-            <code class="permission-code">{{ permission.value }}</code>
-          </span>
-        </label>
-        {% endfor %}
-      </fieldset>
-
-      <button class="action-button" type="submit">Save permissions</button>
-    </form>
-  </div>
-</section>
+    <button type="submit">Save permissions</button>
+  </form>
+</article>
 {% endblock %}
