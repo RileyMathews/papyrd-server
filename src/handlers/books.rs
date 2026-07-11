@@ -36,7 +36,8 @@ struct BookDetailTemplate<'a> {
 struct SyncStatusView {
     synced: bool,
     percentage: String,
-    progress: String,
+    percentage_value: f64,
+    _progress: String,
     device: String,
     updated_at: String,
 }
@@ -103,16 +104,19 @@ impl SyncStatusView {
             return Self {
                 synced: false,
                 percentage: String::new(),
-                progress: String::new(),
+                percentage_value: 0.0,
+                _progress: String::new(),
                 device: String::new(),
                 updated_at: String::new(),
             };
         };
 
+        let pct_display = progress.percentage.clamp(0.0, 1.0);
         Self {
             synced: true,
-            percentage: format!("{:.0}%", progress.percentage * 100.0),
-            progress: progress.progress,
+            percentage: format!("{:.0}%", pct_display * 100.0),
+            percentage_value: pct_display * 100.0,
+            _progress: progress.progress,
             device: progress.device,
             updated_at: progress.updated_at.format("%Y-%m-%d %H:%M UTC").to_string(),
         }

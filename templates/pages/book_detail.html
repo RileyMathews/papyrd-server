@@ -65,33 +65,19 @@
     </dl>
 
     <!-- ── Sync progress ── -->
-    <article>
-      <h3>
-        Reading progress {% if sync_status.synced %}
-        <span class="sync-progress-pct">{{ sync_status.percentage }}</span>
-        {% endif %}
-      </h3>
-
+    <article class="sync-progress-card">
       {% if sync_status.synced %}
-      <progress
-        max="100"
-        value="{{ sync_status.percentage }}"
-      >
-        {{ sync_status.percentage }}
-      </progress>
-
-      <dl class="sync-progress-meta">
-        <dt>Locator</dt>
-        <dd>
-          <code><small>{{ sync_status.progress }}</small></code>
-        </dd>
-
-        <dt>Device</dt>
-        <dd>{{ sync_status.device }}</dd>
-
-        <dt>Last synced</dt>
-        <dd>{{ sync_status.updated_at }}</dd>
-      </dl>
+      <div class="sync-progress-heading">
+        <strong>Reading progress</strong>
+        <progress
+          max="100"
+          value="{{ sync_status.percentage_value }}"
+        ></progress>
+        <small>{{ sync_status.percentage }}</small>
+      </div>
+      <p>
+        <small>{{ sync_status.device }} at {{ sync_status.updated_at }}</small>
+      </p>
       {% else %}
       <p class="sync-empty">
         <small>No KOReader progress has been synced for this book yet.</small>
@@ -119,8 +105,6 @@
 
 <script>
   (() => {
-
-
     const deleteBtn = document.getElementById("delete-btn");
     const confirmDialog = document.getElementById("confirm-delete");
     const deleteForm = document.getElementById("delete-form");

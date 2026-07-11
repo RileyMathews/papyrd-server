@@ -372,44 +372,18 @@ main.container {
 	margin: 0.25rem 0 0;
 }
 
-/* ── Sync progress — uses Pico progress element natively ── */
-.sync-progress {
-	margin-top: 1.5rem;
-}
-
-.sync-progress h3 {
-	margin: 0 0 0.75rem;
-	font-size: 1rem;
+/* ── Sync progress card ── */
+.sync-progress-heading {
 	display: flex;
-	align-items: baseline;
-	gap: 0.5rem;
+	align-items: center;
+	gap: 0.75rem;
+	white-space: nowrap;
+	margin-bottom: 0.35rem;
 }
 
-.sync-progress-pct {
-	font-weight: 400;
-	color: var(--pico-muted-color);
-	font-size: 0.875rem;
-}
-
-.sync-progress-meta {
-	margin: 1rem 0 0;
-}
-
-.sync-progress-meta dt {
-	font-weight: 600;
-	font-size: 0.8125rem;
-	color: var(--pico-muted-color);
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
-	margin-top: 0.75rem;
-}
-
-.sync-progress-meta dt:first-of-type {
-	margin-top: 0;
-}
-
-.sync-progress-meta dd {
-	margin: 0.125rem 0 0;
+.sync-progress-heading progress {
+	width: auto;
+	flex: 1;
 }
 
 .sync-empty {
