@@ -8,7 +8,7 @@ block content %}
   <p>Use the username you signed up with to access the shared catalog.</p>
 
   {% if let Some(message) = error %}
-  <mark class="pico-background-red-100 pico-color-red-600">{{ message }}</mark>
+  <article class="pico-background-red-150 pico-color-red-650">{{ message }}</article>
   {% endif %}
 
   <form method="post" action="/signin">

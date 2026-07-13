@@ -17,9 +17,7 @@
   <p>Select which code-defined permissions this user should have.</p>
 
   {% if saved %}
-  <mark class="pico-background-jade-100 pico-color-jade-600"
-    >Permissions saved.</mark
-  >
+  <article class="pico-background-jade-150 pico-color-jade-650">Permissions saved.</article>
   {% endif %}
 
   <form method="post" action="/admin/users/{{ user.id }}/permissions">

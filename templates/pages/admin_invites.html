@@ -21,13 +21,9 @@ block content %}
   <p>Invite links expire automatically and can only be used once.</p>
 
   {% if created %}
-  <mark class="pico-background-jade-100 pico-color-jade-600"
-    >Invite created.</mark
-  >
+  <article class="pico-background-jade-150 pico-color-jade-650">Invite created.</article>
   {% endif %} {% if expired %}
-  <mark class="pico-background-jade-100 pico-color-jade-600"
-    >Invite expired.</mark
-  >
+  <article class="pico-background-jade-150 pico-color-jade-650">Invite expired.</article>
   {% endif %}
 
   <form method="post" action="/admin/invites">

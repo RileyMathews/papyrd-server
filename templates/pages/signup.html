@@ -34,7 +34,7 @@ block content %}
     sign in with later.
   </p>
   {% endif %} {% if let Some(message) = error %}
-  <mark class="pico-background-red-100 pico-color-red-600">{{ message }}</mark>
+  <article class="pico-background-red-150 pico-color-red-650">{{ message }}</article>
   {% endif %} {% if !signup_closed %}
   <form method="post" action="/signup">
     {% if let Some(invite_key) = invite_key %}

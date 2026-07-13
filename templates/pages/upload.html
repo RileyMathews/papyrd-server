@@ -12,7 +12,7 @@ content %}
   </p>
 
   {% if let Some(message) = error %}
-  <mark class="pico-background-red-100 pico-color-red-600">{{ message }}</mark>
+  <article class="pico-background-red-150 pico-color-red-650">{{ message }}</article>
   {% endif %}
 
   <form method="post" action="/upload" enctype="multipart/form-data">
@@ -31,13 +31,13 @@ content %}
   {% if let Some(summary) = summary %}
   <section aria-live="polite" style="margin-top: 1.5rem">
     <p>
-      <mark class="pico-background-jade-100 pico-color-jade-600"
+      <mark class="pico-background-jade-150 pico-color-jade-650"
         >{{ summary.uploaded_count }} uploaded</mark
       >
-      <mark class="pico-background-amber-100 pico-color-amber-600"
+      <mark class="pico-background-amber-150 pico-color-amber-650"
         >{{ summary.duplicate_count }} duplicates</mark
       >
-      <mark class="pico-background-red-100 pico-color-red-600"
+      <mark class="pico-background-red-150 pico-color-red-650"
         >{{ summary.failed_count }} failed</mark
       >
     </p>
