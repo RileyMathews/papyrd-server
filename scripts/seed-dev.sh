@@ -241,6 +241,39 @@ done
 popd >/dev/null
 rm -rf "$TMPDIR" "$COVERS"
 
+echo "==> Seeding KOReader sync progress ..."
+docker compose -f docker-compose.dev.yml exec -T postgres psql -U papyrd -d papyrd <<'SQL'
+WITH admin AS (
+  SELECT id FROM users WHERE username = 'admin'
+)
+INSERT INTO reading_progress (user_id, document, progress, percentage, device, device_id, updated_at)
+SELECT a.id, e.partial_md5, v.progress, v.percentage, v.device, v.device_id, v.updated_at
+FROM admin a
+CROSS JOIN (VALUES
+  ('Foundation',                                    '/body/DocFragment[1]/body/div/p[380]/text().12',  1.0,  'KOReader (Kobo Libra 2)',   'kobo-libra2-001',   NOW() - INTERVAL '2 days'),
+  ('Deep Work',                                     '/body/DocFragment[1]/body/div/p[220]/text().45',  1.0,  'KOReader (Android)',         'android-phone-001',  NOW() - INTERVAL '5 days'),
+  ('I, Robot',                                      '/body/DocFragment[1]/body/div/p[260]/text().80',  0.75, 'KOReader (Kobo Libra 2)',   'kobo-libra2-001',   NOW() - INTERVAL '1 day'),
+  ('Clean Code',                                    '/body/DocFragment[1]/body/div/p[180]/text().33',  0.50, 'KOReader (Desktop)',         'desktop-linux-001',  NOW() - INTERVAL '3 days'),
+  ('The Hobbit',                                    '/body/DocFragment[1]/body/div/p[95]/text().67',   0.30, 'KOReader (Kobo Libra 2)',   'kobo-libra2-001',   NOW() - INTERVAL '1 hour'),
+  ('The Pragmatic Programmer',                      '/body/DocFragment[1]/body/div/p[40]/text().10',   0.10, 'KOReader (Android)',         'android-phone-001',  NOW() - INTERVAL '7 days'),
+  ('Designing Data-Intensive Applications',         '/body/DocFragment[1]/body/div/p[340]/text().55',  0.60, 'KOReader (Kobo Libra 2)',   'kobo-libra2-001',   NOW() - INTERVAL '12 hours'),
+  ('Site Reliability Engineering',                  '/body/DocFragment[1]/body/div/p[420]/text().91',  0.85, 'KOReader (Android Tablet)',  'android-tablet-001', NOW() - INTERVAL '6 hours'),
+  ('Foundation and Empire',                         '/body/DocFragment[1]/body/div/p[150]/text().22',  0.42, 'KOReader (Kobo Libra 2)',   'kobo-libra2-001',   NOW() - INTERVAL '3 days'),
+  ('The Phoenix Project',                           '/body/DocFragment[1]/body/div/p[18]/text().5',    0.05, 'KOReader (Desktop)',         'desktop-mac-001',    NOW() - INTERVAL '30 days'),
+  ('Zero to One',                                   '/body/DocFragment[1]/body/div/p[8]/text().3',     0.02, 'KOReader (Kobo Libra 2)',   'kobo-libra2-001',   NOW() - INTERVAL '14 days'),
+  ('The Caves of Steel',                            '/body/DocFragment[1]/body/div/p[55]/text().88',   0.15, 'KOReader (Kobo Libra 2)',   'kobo-libra2-001',   NOW() - INTERVAL '10 minutes')
+) AS v(title, progress, percentage, device, device_id, updated_at)
+JOIN publications p ON p.title = v.title
+JOIN assets e ON e.publication_id = p.id AND e.kind = 'primary_epub' AND e.partial_md5 IS NOT NULL
+ON CONFLICT (user_id, document) DO UPDATE SET
+  progress   = EXCLUDED.progress,
+  percentage  = EXCLUDED.percentage,
+  device      = EXCLUDED.device,
+  device_id   = EXCLUDED.device_id,
+  updated_at  = EXCLUDED.updated_at;
+SQL
+echo "     Done."
+
 echo "==> Seed complete! Open $BASE in your browser."
 echo "     Login: $USERNAME / $PASSWORD"
 rm -f /tmp/papyrd-cookies.txt
