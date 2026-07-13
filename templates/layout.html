@@ -14,18 +14,19 @@
       <nav>
         <ul>
           <li>
-            <strong><a href="/" class="contrast">Papyrd</a></strong>
+            <strong><a href="/">Papyrd</a></strong>
           </li>
         </ul>
         <ul>
           {% block header_nav %}
-          <li><a href="/signin">Sign in</a></li>
-          <li><a href="/signup">Sign up</a></li>
+          <li><button onclick="window.location.href='/signin'" class="nav-item secondary">Sign in</button></li>
+          <li><button onclick="window.location.href='/signup'" class="nav-item secondary">Sign up</button></li>
           {% endblock %}
         </ul>
       </nav>
     </header>
 
+    <form id="signout-form" method="post" action="/signout" hidden></form>
     <main class="container">{% block content %}{% endblock %}</main>
   </body>
 </html>
