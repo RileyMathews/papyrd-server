@@ -17,3 +17,11 @@ dev-down:
 # Quick local run (requires postgres already running)
 run:
     source .envrc && cargo run
+
+# Start postgres only for native dev
+dev-db:
+    docker compose -f docker-compose.dev.yml up -d postgres
+
+# Run app natively with auto-reload (postgres must be running separately)
+dev-native:
+    source .envrc && cargo watch -x run
