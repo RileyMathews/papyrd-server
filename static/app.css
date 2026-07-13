@@ -8,6 +8,47 @@ main.container {
 	container-name: main-content;
 }
 
+/* ── Responsive nav — stack vertically at small widths ── */
+@media (max-width: 575px) {
+	nav {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.5rem;
+	}
+
+	nav ul {
+		flex-direction: column;
+		width: 100%;
+	}
+
+	nav ul li {
+		width: 100%;
+	}
+
+	nav ul li a[role="button"],
+	nav ul li button {
+		width: 100%;
+		text-align: left;
+	}
+}
+
+/* ── Nav items — borderless buttons ── */
+nav li .nav-item {
+  margin: 0;
+  border: none;
+  border-radius: var(--pico-border-radius);
+  background: transparent;
+  padding: var(--pico-nav-link-spacing-vertical) var(--pico-nav-link-spacing-horizontal);
+}
+
+nav li a.nav-item {
+  color: inherit;
+}
+
+nav li .nav-item:hover {
+  background: var(--pico-background-color);
+}
+
 /* ── Page header — title + optional action button ── */
 .page-header {
 	display: flex;
@@ -24,6 +65,7 @@ main.container {
 	align-items: center;
 	flex-wrap: wrap;
 	gap: 0.75rem;
+	row-gap: 1rem;
 	margin-bottom: 2rem;
 	padding-bottom: 1rem;
 	border-bottom: 1px solid var(--pico-muted-border-color);
@@ -52,13 +94,9 @@ main.container {
 
 /* ── Book grid ── */
 .book-grid {
-	display: flex;
-	flex-wrap: wrap;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 	gap: 1.5rem;
-}
-
-.book-grid > * {
-	flex: 0 1 200px;
 }
 
 /* ── Book card ── */
@@ -390,3 +428,5 @@ main.container {
 	margin: 0;
 	color: var(--pico-muted-color);
 }
+
+
