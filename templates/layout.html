@@ -1,26 +1,32 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="stylesheet" href="/static/pico.min.css" />
+    <link rel="stylesheet" href="/static/pico.colors.min.css" />
+    <link rel="stylesheet" href="/static/app.css" />
     <title>{% block title %}Papyrd{% endblock %}</title>
-    <link rel="stylesheet" href="/static/app.css">
   </head>
   <body>
-    <div class="app-shell">
-      <header class="site-header">
-        <a class="brand" href="/">Papyrd</a>
-        <nav class="nav-list">
+    <header class="container">
+      <nav>
+        <ul>
+          <li>
+            <a href="/" class="brand-link contrast">Papyrd</a>
+          </li>
+        </ul>
+        <ul>
           {% block header_nav %}
-          <a class="item" href="/signin">Sign in</a>
-          <a class="item" href="/signup">Sign up</a>
+          <li><a href="/signin" class="nav-link contrast">Sign in</a></li>
+          <li><a href="/signup" class="nav-link contrast">Sign up</a></li>
           {% endblock %}
-        </nav>
-      </header>
+        </ul>
+      </nav>
+    </header>
 
-      <main class="page-area">
-        {% block content %}{% endblock %}
-      </main>
-    </div>
+    <form id="signout-form" method="post" action="/signout" hidden></form>
+    <main class="container">{% block content %}{% endblock %}</main>
   </body>
 </html>

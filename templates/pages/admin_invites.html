@@ -1,76 +1,79 @@
-{% extends "layout.html" %}
-
-{% block title %}Invites | Papyrd{% endblock %}
-
-{% block header_nav %}
-{% include "partials/app_nav.html" %}
-{% endblock %}
-
-{% block content %}
-<section class="catalog-page">
-  <div class="catalog-bar">
-    <div class="page-intro">
-      <p class="kicker">Administration</p>
-      <h1 class="title">Invites</h1>
-      <p class="body">
-        Create one-time signup links for new users while public signups are closed.
+{% extends "layout.html" %} {% block title %}Invites | Papyrd{% endblock %} {%
+block header_nav %} {% include "partials/app_nav.html" %} {% endblock %} {%
+block content %}
+<section>
+  <div class="page-header">
+    <hgroup>
+      <h1>Invites</h1>
+      <p>
+        Create one-time signup links for new users while public signups are
+        closed.
       </p>
-    </div>
+    </hgroup>
   </div>
-
-  <section class="surface-panel invite-create-panel">
-    <div class="page-intro">
-      <p class="kicker">New invite</p>
-      <h2 class="section-title">Create an invite link</h2>
-      <p class="body">
-        Invite links expire automatically and can only be used once.
-      </p>
-    </div>
-
-    {% if created %}
-    <p class="message-box -success">Invite created.</p>
-    {% endif %}
-    {% if expired %}
-    <p class="message-box -success">Invite expired.</p>
-    {% endif %}
-
-    <form class="form-stack" method="post" action="/admin/invites">
-      <label class="form-field">
-        <span class="label">Note</span>
-        <textarea class="input" name="note" rows="3" placeholder="Optional context shown only on this page"></textarea>
-      </label>
-
-      <button class="action-button" type="submit">Create invite</button>
-    </form>
-  </section>
-
-  <section class="surface-panel invite-list-panel">
-    <div class="page-intro">
-      <p class="kicker">Open invites</p>
-      <h2 class="section-title">Invite links</h2>
-    </div>
-
-    {% if has_invites %}
-    <div class="invite-list">
-      {% for invite in invites %}
-      <article class="invite-row">
-        <div class="text">
-          <a class="invite-link" href="{{ invite.link }}">{{ invite.link }}</a>
-          {% if let Some(note) = invite.note %}
-          <p class="note">{{ note }}</p>
-          {% endif %}
-          <p class="meta">Created by {{ invite.created_by }} on {{ invite.created_at }}. Expires {{ invite.expires_at }}.</p>
-        </div>
-
-        <form method="post" action="/admin/invites/{{ invite.id }}/expire">
-          <button class="action-button -compact -danger" type="submit">Expire</button>
-        </form>
-      </article>
-      {% endfor %}
-    </div>
-    {% else %}
-    <p class="empty-copy">There are no open invites.</p>
-    {% endif %}
-  </section>
 </section>
+
+<hr />
+
+<article>
+  <hgroup>
+    <h2>Create an invite link</h2>
+    <p>New invite</p>
+  </hgroup>
+
+  {% if created %}
+  <article class="pico-background-jade-150 pico-color-jade-650">Invite created.</article>
+  {% endif %} {% if expired %}
+  <article class="pico-background-jade-150 pico-color-jade-650">Invite expired.</article>
+  {% endif %}
+
+  <form method="post" action="/admin/invites">
+    <fieldset role="group">
+      <input
+        name="note"
+        placeholder="Optional note"
+        aria-label="Note"
+      />
+      <button type="submit">Create</button>
+    </fieldset>
+  </form>
+</article>
+
+<article>
+  <hgroup>
+    <h2>Invite links</h2>
+    <p>Open invites</p>
+  </hgroup>
+
+  {% if has_invites %}
+  <table>
+    <thead>
+      <tr>
+        <th>Link</th>
+        <th>Note</th>
+        <th>Created by</th>
+        <th>Expires</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for invite in invites %}
+      <tr>
+        <td><a href="{{ invite.link }}">Invite link</a></td>
+        <td>{% if let Some(note) = invite.note %}{{ note }}{% else %}—{% endif %}</td>
+        <td><small>{{ invite.created_by }}</small></td>
+        <td><small>{{ invite.expires_at }}</small></td>
+        <td>
+          <form method="post" action="/admin/invites/{{ invite.id }}/expire" class="form-flush">
+            <button type="submit" class="secondary">Expire</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>There are no open invites.</p>
+  {% endif %}
+</article>
 {% endblock %}

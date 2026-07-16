@@ -1,57 +1,57 @@
-{% extends "layout.html" %}
+{% extends "layout.html" %} {% block title %}{{ author_name }}{% endblock %} {%
+block header_nav %} {% include "partials/app_nav.html" %} {% endblock %} {%
+block content %}
+<!-- ── Toolbar ── -->
+<nav class="detail-toolbar">
+  <a href="/authors" class="detail-back">← Back to all authors</a>
+</nav>
 
-{% block title %}{{ author_name }}{% endblock %}
-
-{% block header_nav %}
-{% include "partials/app_nav.html" %}
-{% endblock %}
-
-{% block content %}
-<section class="detail-page">
-  <a class="back-link" href="/authors">Back to authors</a>
-
-  <section class="catalog-page">
-    <div class="author-hero surface-panel">
-      <div class="page-intro">
-        <p class="kicker">Author</p>
-        <h1 class="title">{{ author_name }}</h1>
-        <p class="body">
-          {{ publications.len() }} {% if publications.len() == 1 %}book{% else %}books{% endif %} in the shared catalog.
-        </p>
-      </div>
-    </div>
-
-    {% if publications.len() == 0 %}
-    <section class="surface-panel empty-panel">
-      <div class="page-intro">
-        <p class="kicker">Nothing here yet</p>
-        <h2 class="title">No books are available for this author.</h2>
-      </div>
-    </section>
-    {% else %}
-    <section class="book-grid">
-      {% for publication in publications %}
-      <article class="book-card">
-        <a class="link" href="/books/{{ publication.id }}">
-          {% match publication.cover_image_path %}
-          {% when Some with (cover_image_path) %}
-          <img class="cover" src="/books/{{ publication.id }}/cover" alt="Cover for {{ publication.title }}">
-          {% when None %}
-          <div class="cover -fallback" aria-hidden="true">
-            <span class="initial">{{ publication.title_initial }}</span>
-          </div>
-          {% endmatch %}
-
-          <div class="text">
-            <h2 class="title">{{ publication.title }}</h2>
-            <p class="author">{{ publication.contributors }}</p>
-            <p class="meta">{{ publication.source_identifier }}</p>
-          </div>
-        </a>
-      </article>
-      {% endfor %}
-    </section>
-    {% endif %}
-  </section>
+<section>
+  <hgroup>
+    <h1>{{ author_name }}</h1>
+    <p>
+      {{ publications.len() }} {% if publications.len() == 1 %}book{% else
+      %}books{% endif %} in the shared catalog.
+    </p>
+  </hgroup>
 </section>
-{% endblock %}
+
+<hr />
+
+{% if publications.len() == 0 %}
+<section>
+  <h2>Nothing here yet</h2>
+  <p>No books are available for this author.</p>
+</section>
+{% else %}
+<div class="book-grid">
+  {% for publication in publications %}
+  <div class="book-card">
+    <a href="/books/{{ publication.id }}" class="book-cover">
+      {% match publication.cover_image_path %} {% when Some with
+      (cover_image_path) %}
+      <img
+        src="/books/{{ publication.id }}/cover"
+        alt="Cover for {{ publication.title }}"
+      />
+      {% when None %}
+      <div class="cover-fallback" aria-hidden="true">
+        <span>{{ publication.title_initial }}</span>
+      </div>
+      {% endmatch %}
+    </a>
+    <hgroup>
+      <a href="/books/{{ publication.id }}"><h3>{{ publication.title }}</h3></a>
+      <p>
+        <small>
+          {% for link in publication.contributor_links %} {% if !loop.first %},
+          {% endif %}
+          <a href="/authors/{{ link.key|urlencode }}">{{ link.name }}</a>
+          {% endfor %}
+        </small>
+      </p>
+    </hgroup>
+  </div>
+  {% endfor %}
+</div>
+{% endif %} {% endblock %}
