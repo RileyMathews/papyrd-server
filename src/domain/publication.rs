@@ -45,6 +45,10 @@ pub struct Contributor {
 }
 
 impl Contributor {
+    pub fn key(&self) -> String {
+        self.name.to_lowercase()
+    }
+
     pub fn role_suffix(&self) -> &'static str {
         match self.role {
             ContributorRole::Contributor => "",
@@ -57,11 +61,18 @@ impl Contributor {
 }
 
 #[derive(Clone, Debug)]
+pub struct ContributorLink {
+    pub name: String,
+    pub key: String,
+}
+
+#[derive(Clone, Debug)]
 pub struct PublicationSummary {
     pub id: Uuid,
     pub source_identifier: String,
     pub title: String,
     pub contributors: String,
+    pub contributor_links: Vec<ContributorLink>,
     pub cover_image_path: Option<String>,
     pub title_initial: String,
 }
@@ -71,6 +82,7 @@ pub struct AuthorSummary {
     pub key: String,
     pub name: String,
     pub publication_count: i64,
+    pub cover_publication_ids: Vec<String>,
 }
 
 #[derive(Clone, Debug)]

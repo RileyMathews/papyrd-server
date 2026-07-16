@@ -2,8 +2,8 @@ use chrono::{DateTime, Utc};
 use sqlx::{PgPool, Row};
 
 use crate::domain::publication::{
-    AuthorSummary, Contributor, ContributorRole, NewPublication, OpdsPublicationSummary,
-    PublicationDetail, PublicationSummary,
+    AuthorSummary, Contributor, ContributorLink, ContributorRole, NewPublication,
+    OpdsPublicationSummary, PublicationDetail, PublicationSummary,
 };
 
 pub const DEFAULT_PAGE_SIZE: i64 = 20;
@@ -27,7 +27,16 @@ pub async fn list_authors(db: &PgPool) -> Result<Vec<AuthorSummary>, sqlx::Error
         select
             lower(c.name) as author_key,
             min(c.name) as author_name,
-            count(distinct pc.publication_id) as publication_count
+            count(distinct pc.publication_id) as publication_count,
+            array(
+                select p2.id::text
+                from publication_contributors pc2
+                join publications p2 on p2.id = pc2.publication_id
+                where pc2.contributor_id = any(array_agg(c.id))
+                  and pc2.role = 'author'
+                order by lower(coalesce(p2.sort_title, p2.title))
+                limit 10
+            ) as cover_publication_ids
         from contributors c
         join publication_contributors pc on pc.contributor_id = c.id
         where pc.role = 'author'
@@ -44,6 +53,7 @@ pub async fn list_authors(db: &PgPool) -> Result<Vec<AuthorSummary>, sqlx::Error
             key: row.get("author_key"),
             name: row.get("author_name"),
             publication_count: row.get("publication_count"),
+            cover_publication_ids: row.get("cover_publication_ids"),
         })
         .collect())
 }
@@ -62,7 +72,8 @@ pub async fn list_publications_by_author(
             coalesce(
                 string_agg(distinct c_all.name, ', ' order by c_all.name),
                 'No contributors listed'
-            ) as contributors
+            ) as contributors,
+            array_remove(array_agg(distinct c_all.name), null) as contributor_names
         from publications p
         join publication_contributors pc_author on pc_author.publication_id = p.id and pc_author.role = 'author'
         join contributors c_author on c_author.id = pc_author.contributor_id
@@ -109,7 +120,8 @@ pub async fn list_publications(db: &PgPool) -> Result<Vec<PublicationSummary>, s
             coalesce(
                 string_agg(c.name, ', ' order by pc.position nulls last, c.name),
                 'No contributors listed'
-            ) as contributors
+            ) as contributors,
+            array_remove(array_agg(c.name order by pc.position nulls last, c.name), null) as contributor_names
         from publications p
         left join publication_contributors pc on pc.publication_id = p.id
         left join contributors c on c.id = pc.contributor_id
@@ -507,6 +519,10 @@ pub async fn create_publication(
 
 fn publication_summary_from_row(row: sqlx::postgres::PgRow) -> PublicationSummary {
     let title = row.get::<String, _>("title");
+    let contributor_names: Vec<String> = row.get::<Vec<String>, _>("contributor_names")
+        .into_iter()
+        .filter(|n| !n.is_empty())
+        .collect();
 
     PublicationSummary {
         id: row.get("id"),
@@ -515,6 +531,13 @@ fn publication_summary_from_row(row: sqlx::postgres::PgRow) -> PublicationSummar
         cover_image_path: row.get("cover_image_path"),
         title,
         contributors: row.get("contributors"),
+        contributor_links: contributor_names
+            .into_iter()
+            .map(|name| ContributorLink {
+                key: name.to_lowercase(),
+                name,
+            })
+            .collect(),
     }
 }
 
