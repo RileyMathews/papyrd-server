@@ -9,7 +9,7 @@ argon2 = "0.5"
 notify = "8"
 askama = "0.12"
 axum = { version = "0.8", features = ["multipart"] }
-axum-extra = { version = "0.10", features = ["cookie-private"] }
+axum-extra = { version = "0.10", features = ["cookie-private", "form"] }
 base64 = "0.22"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 quick-xml = "0.38"

@@ -2,11 +2,10 @@ use std::collections::HashSet;
 
 use askama::Template;
 use axum::{
-    Form,
     extract::{Path, Query, State},
     response::{Html, IntoResponse, Redirect, Response},
 };
-use axum_extra::extract::PrivateCookieJar;
+use axum_extra::extract::{Form, PrivateCookieJar};
 use chrono::{Duration, Utc};
 use serde::Deserialize;
 use uuid::Uuid;
@@ -305,4 +304,30 @@ fn normalize_note(value: Option<&str>) -> Option<String> {
 
 fn new_invite_key() -> String {
     Uuid::new_v4().simple().to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use axum::{
+        body::Body,
+        extract::FromRequest,
+        http::{Request, header::CONTENT_TYPE},
+    };
+
+    use super::*;
+
+    #[tokio::test]
+    async fn permission_form_deserializes_single_checkbox_value() {
+        let request = Request::builder()
+            .method("POST")
+            .header(CONTENT_TYPE, "application/x-www-form-urlencoded")
+            .body(Body::from("permissions=user.permissions.edit"))
+            .unwrap();
+
+        let Form(form) = Form::<PermissionForm>::from_request(request, &())
+            .await
+            .unwrap();
+
+        assert_eq!(form.permissions, vec!["user.permissions.edit"]);
+    }
 }
