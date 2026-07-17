@@ -519,7 +519,8 @@ pub async fn create_publication(
 
 fn publication_summary_from_row(row: sqlx::postgres::PgRow) -> PublicationSummary {
     let title = row.get::<String, _>("title");
-    let contributor_names: Vec<String> = row.get::<Vec<String>, _>("contributor_names")
+    let contributor_names: Vec<String> = row
+        .get::<Vec<String>, _>("contributor_names")
         .into_iter()
         .filter(|n| !n.is_empty())
         .collect();

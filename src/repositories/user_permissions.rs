@@ -21,7 +21,7 @@ pub async fn list_permissions_for_user(
 
     Ok(rows
         .into_iter()
-        .filter_map(|row| Permission::from_str(row.get("permission")))
+        .filter_map(|row| Permission::parse(row.get("permission")))
         .collect())
 }
 
