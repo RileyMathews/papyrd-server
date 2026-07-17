@@ -1,45 +1,53 @@
-{% extends "layout.html" %}
+{% extends "layout.html" %} {% block title %}Permissions for {{ user.username }}
+| Papyrd{% endblock %} {% block header_nav %} {% include "partials/app_nav.html"
+%} {% endblock %} {% block content %}
+<!-- ── Toolbar ── -->
+<nav class="detail-toolbar">
+  <a href="/admin/users" class="detail-back">← Back to users</a>
+</nav>
 
-{% block title %}Permissions for {{ user.username }} | Papyrd{% endblock %}
+<article class="narrow-page">
+  <hgroup>
+    <h1>{{ user.username }}</h1>
+    <p>User permissions</p>
+  </hgroup>
 
-{% block header_nav %}
-{% include "partials/app_nav.html" %}
-{% endblock %}
+  <p>Select which code-defined permissions this user should have.</p>
 
-{% block content %}
-<section class="detail-page">
-  <a class="back-link" href="/admin/users">Back to users</a>
+  {% if saved %}
+  <article class="pico-background-jade-150 pico-color-jade-650">Permissions saved.</article>
+  {% endif %}
 
-  <div class="surface-panel permissions-panel">
-    <div class="page-intro">
-      <p class="kicker">User permissions</p>
-      <h1 class="title">{{ user.username }}</h1>
-      <p class="body">
-        Select which code-defined permissions this user should have.
-      </p>
-    </div>
-
-    {% if saved %}
-    <p class="message-box -success">Permissions saved.</p>
-    {% endif %}
-
-    <form class="form-stack" method="post" action="/admin/users/{{ user.id }}/permissions">
-      <fieldset class="permission-list">
-        <legend class="field-legend">Permissions</legend>
-        {% for permission in permission_options %}
-        <label class="permission-option" for="{{ permission.input_id }}">
-          <input id="{{ permission.input_id }}" type="checkbox" name="permissions" value="{{ permission.value }}"{% if permission.checked %} checked{% endif %}>
-          <span class="text">
-            <span class="label">{{ permission.label }}</span>
-            <span class="description">{{ permission.description }}</span>
-            <code class="permission-code">{{ permission.value }}</code>
-          </span>
+  <form method="post" action="/admin/users/{{ user.id }}/permissions">
+    <fieldset>
+      <legend>Permissions</legend>
+      {% for permission in permission_options %}
+      <div class="permission-row">
+        <label>
+          <input
+            type="checkbox"
+            role="switch"
+            name="permissions"
+            value="{{ permission.value }}"
+            {%
+            if
+            permission.checked
+            %}
+            checked{%
+            endif
+            %}
+          />
+          {{ permission.label }}
         </label>
-        {% endfor %}
-      </fieldset>
+        <small>
+          {{ permission.description }}
+          <code>{{ permission.value }}</code>
+        </small>
+      </div>
+      {% endfor %}
+    </fieldset>
 
-      <button class="action-button" type="submit">Save permissions</button>
-    </form>
-  </div>
-</section>
+    <button type="submit">Save permissions</button>
+  </form>
+</article>
 {% endblock %}

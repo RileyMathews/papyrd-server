@@ -1,14 +1,12 @@
-<a class="item{% if active_nav == "books" %} -current{% endif %}" href="/books">All books</a>
-<a class="item{% if active_nav == "authors" %} -current{% endif %}" href="/authors">Authors</a>
+<li><a href="/books" class="nav-link contrast"{% if active_nav == "books" %} aria-current="page"{% endif %}>Books</a></li>
+<li><a href="/authors" class="nav-link contrast"{% if active_nav == "authors" %} aria-current="page"{% endif %}>Authors</a></li>
 {% if nav.can_upload_publications %}
-<a class="item{% if active_nav == "upload" %} -current{% endif %}" href="/upload">Upload</a>
+<li><a href="/upload" class="nav-link contrast"{% if active_nav == "upload" %} aria-current="page"{% endif %}>Upload</a></li>
 {% endif %}
 {% if nav.can_edit_permissions %}
-<a class="item{% if active_nav == "admin" %} -current{% endif %}" href="/admin/users">Users</a>
+<li><a href="/admin/users" class="nav-link contrast"{% if active_nav == "admin" %} aria-current="page"{% endif %}>Users</a></li>
 {% endif %}
 {% if nav.can_invite_users %}
-<a class="item{% if active_nav == "invites" %} -current{% endif %}" href="/admin/invites">Invites</a>
+<li><a href="/admin/invites" class="nav-link contrast"{% if active_nav == "invites" %} aria-current="page"{% endif %}>Invites</a></li>
 {% endif %}
-<form class="form" method="post" action="/signout">
-  <button class="item item-button" type="submit">Sign out</button>
-</form>
+<li><button type="submit" form="signout-form" class="nav-link secondary">Sign out</button></li>

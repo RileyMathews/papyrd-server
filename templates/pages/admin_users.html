@@ -1,33 +1,37 @@
-{% extends "layout.html" %}
-
-{% block title %}Users | Papyrd{% endblock %}
-
-{% block header_nav %}
-{% include "partials/app_nav.html" %}
-{% endblock %}
-
-{% block content %}
-<section class="catalog-page">
-  <div class="catalog-bar">
-    <div class="page-intro">
-      <p class="kicker">Administration</p>
-      <h1 class="title">Users</h1>
-      <p class="body">
-        View server users and manage their permissions.
-      </p>
-    </div>
+{% extends "layout.html" %} {% block title %}Users | Papyrd{% endblock %} {%
+block header_nav %} {% include "partials/app_nav.html" %} {% endblock %} {%
+block content %}
+<section>
+  <div class="page-header">
+    <hgroup>
+      <h1>Users</h1>
+      <p>View server users and manage their permissions.</p>
+    </hgroup>
   </div>
-
-  <section class="surface-panel user-list">
-    {% for user in users %}
-    <article class="user-row">
-      <div class="text">
-        <h2 class="name">{{ user.username }}</h2>
-        <p class="meta">Created {{ user.created_at.format("%Y-%m-%d") }}</p>
-      </div>
-      <a class="action-button -compact" href="/admin/users/{{ user.id }}/permissions">Permissions</a>
-    </article>
-    {% endfor %}
-  </section>
 </section>
+
+<hr />
+
+{% if users.len() == 0 %}
+<p>No users found.</p>
+{% else %}
+<table>
+  <thead>
+    <tr>
+      <th>Username</th>
+      <th>Created</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for user in users %}
+    <tr>
+      <td><strong>{{ user.username }}</strong></td>
+      <td><small>{{ user.created_at.format("%Y-%m-%d") }}</small></td>
+      <td><a href="/admin/users/{{ user.id }}/permissions" role="button" class="outline">Permissions</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
 {% endblock %}

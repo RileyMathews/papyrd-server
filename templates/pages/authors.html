@@ -1,42 +1,56 @@
-{% extends "layout.html" %}
-
-{% block title %}Authors{% endblock %}
-
-{% block header_nav %}
-{% include "partials/app_nav.html" %}
-{% endblock %}
-
-{% block content %}
-<section class="catalog-page">
-  <div class="catalog-bar">
-    <div class="page-intro">
-      <p class="kicker">Contributors</p>
-      <h1 class="title">Authors</h1>
-      <p class="body">
-        Browse the shared catalog by author and jump straight to each writer's books.
+{% extends "layout.html" %} {% block title %}Authors{% endblock %} {% block
+header_nav %} {% include "partials/app_nav.html" %} {% endblock %} {% block
+content %}
+<section>
+  <div class="page-header">
+    <hgroup>
+      <h1>Authors</h1>
+      <p>
+        Browse the shared catalog by author and jump straight to each writer's
+        books.
       </p>
-    </div>
+    </hgroup>
+    {% if nav.can_upload_publications %}
+    <a href="/upload" role="button">Upload a book</a>
+    {% endif %}
   </div>
-
-  {% if authors.len() == 0 %}
-  <section class="surface-panel empty-panel">
-    <div class="page-intro">
-      <p class="kicker">Nothing here yet</p>
-      <h2 class="title">No authors are available.</h2>
-      <p class="body">
-        Upload the first EPUB with author metadata to start browsing by author.
-      </p>
-    </div>
-  </section>
-  {% else %}
-  <section class="author-list surface-panel">
-    {% for author in authors %}
-    <a class="author-link" href="/authors/{{ author.key|urlencode }}">
-      <span class="name">{{ author.name }}</span>
-      <span class="count">{{ author.publication_count }} {% if author.publication_count == 1 %}book{% else %}books{% endif %}</span>
-    </a>
-    {% endfor %}
-  </section>
-  {% endif %}
 </section>
-{% endblock %}
+
+<hr />
+
+{% if authors.len() == 0 %}
+<section>
+  <h2>Nothing here yet</h2>
+  <p>Upload the first EPUB with author metadata to start browsing by author.</p>
+</section>
+{% else %}
+<div class="author-list">
+  {% for author in authors %}
+  <article class="author-card">
+    <a href="/authors/{{ author.key|urlencode }}" class="author-card-link">
+      <hgroup>
+        <h2>{{ author.name }}</h2>
+        <p>
+          {{ author.publication_count }} {% if author.publication_count == 1
+          %}book{% else %}books{% endif %}
+        </p>
+      </hgroup>
+      {% if !author.cover_publication_ids.is_empty() %}
+      <div class="author-cover-stack" aria-hidden="true">
+        {% for pub_id in author.cover_publication_ids %}
+        <div class="author-cover-item">
+          <img
+            src="/books/{{ pub_id }}/cover"
+            alt=""
+            loading="lazy"
+            onerror="this.style.display = 'none'"
+          />
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </a>
+  </article>
+  {% endfor %}
+</div>
+{% endif %} {% endblock %}
