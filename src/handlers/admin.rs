@@ -50,7 +50,6 @@ struct AdminInvitesTemplate {
 }
 
 struct PermissionOptionView {
-    input_id: String,
     value: &'static str,
     label: &'static str,
     description: &'static str,
@@ -62,7 +61,6 @@ struct InviteView {
     link: String,
     note: Option<String>,
     created_by: String,
-    created_at: String,
     expires_at: String,
 }
 
@@ -238,9 +236,7 @@ fn permission_options(active_permissions: &[Permission]) -> Vec<PermissionOption
     Permission::ALL
         .iter()
         .copied()
-        .enumerate()
-        .map(|(index, permission)| PermissionOptionView {
-            input_id: format!("permission-{index}"),
+        .map(|permission| PermissionOptionView {
             value: permission.as_str(),
             label: permission.label(),
             description: permission.description(),
@@ -253,7 +249,7 @@ fn parse_permissions(values: &[String]) -> Result<Vec<Permission>, AppError> {
     let mut permissions = Vec::new();
 
     for value in values {
-        let Some(permission) = Permission::from_str(value) else {
+        let Some(permission) = Permission::parse(value) else {
             return Err(AppError::BadRequest("Unknown permission selected."));
         };
 
@@ -274,7 +270,6 @@ impl InviteView {
             created_by: invite
                 .created_by_username
                 .unwrap_or_else(|| "Deleted user".to_owned()),
-            created_at: invite.created_at.format("%Y-%m-%d %H:%M UTC").to_string(),
             expires_at: invite.expires_at.format("%Y-%m-%d %H:%M UTC").to_string(),
         }
     }

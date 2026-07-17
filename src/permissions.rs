@@ -45,7 +45,7 @@ impl Permission {
         }
     }
 
-    pub fn from_str(value: &str) -> Option<Self> {
+    pub fn parse(value: &str) -> Option<Self> {
         match value {
             "user.permissions.edit" => Some(Self::UserPermissionsEdit),
             "user.invites.create" => Some(Self::UserInvitesCreate),
