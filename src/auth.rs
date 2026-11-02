@@ -1,6 +1,6 @@
 use argon2::{
     Argon2,
-    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString, rand_core::OsRng},
+    password_hash::{PasswordHasher, PasswordVerifier, phc::PasswordHash},
 };
 use axum::http::HeaderValue;
 use axum_extra::extract::cookie::{Cookie, PrivateCookieJar, SameSite};
@@ -23,10 +23,8 @@ pub fn normalize_username(input: &str) -> Option<String> {
 }
 
 pub fn hash_password(password: &str) -> Result<String, AppError> {
-    let salt = SaltString::generate(&mut OsRng);
-
     Argon2::default()
-        .hash_password(password.as_bytes(), &salt)
+        .hash_password(password.as_bytes())
         .map(|hash| hash.to_string())
         .map_err(|_| AppError::PasswordHash)
 }

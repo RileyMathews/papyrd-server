@@ -4,7 +4,7 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 
-use quick_xml::{Reader, events::Event, name::QName};
+use quick_xml::{Reader, XmlVersion, events::Event, name::QName};
 use thiserror::Error;
 use zip::ZipArchive;
 
@@ -64,12 +64,12 @@ fn container_package_path<R: Read + std::io::Seek>(
     loop {
         match reader.read_event() {
             Ok(Event::Empty(ref event)) | Ok(Event::Start(ref event))
-                if event.name() == QName(b"rootfile") =>
+                if event.name() == QName("rootfile") =>
             {
                 for attribute in event.attributes().flatten() {
-                    if attribute.key == QName(b"full-path") {
+                    if attribute.key == QName("full-path") {
                         let value = attribute
-                            .decode_and_unescape_value(reader.decoder())
+                            .normalized_value(XmlVersion::Implicit1_0)
                             .map_err(|_| EpubError::InvalidPackageDocument)?;
                         return Ok(value.into_owned());
                     }
@@ -100,7 +100,7 @@ fn parse_package_document<R: Read + std::io::Seek>(
 
     loop {
         match reader.read_event() {
-            Ok(Event::Start(ref event)) if is_named(event.name(), b"title") => {
+            Ok(Event::Start(ref event)) if is_named(event.name(), "title") => {
                 let text = reader
                     .read_text(event.name())
                     .map_err(|_| EpubError::InvalidPackageDocument)?;
@@ -108,7 +108,7 @@ fn parse_package_document<R: Read + std::io::Seek>(
                     title = Some(text.trim().to_owned());
                 }
             }
-            Ok(Event::Start(ref event)) if is_named(event.name(), b"identifier") => {
+            Ok(Event::Start(ref event)) if is_named(event.name(), "identifier") => {
                 let text = reader
                     .read_text(event.name())
                     .map_err(|_| EpubError::InvalidPackageDocument)?;
@@ -116,8 +116,8 @@ fn parse_package_document<R: Read + std::io::Seek>(
                     identifier = Some(text.trim().to_owned());
                 }
             }
-            Ok(Event::Start(ref event)) if is_named(event.name(), b"creator") => {
-                let contributor_id = attribute_value(event, reader.decoder(), b"id")?;
+            Ok(Event::Start(ref event)) if is_named(event.name(), "creator") => {
+                let contributor_id = attribute_value(event, "id")?;
                 let text = reader
                     .read_text(event.name())
                     .map_err(|_| EpubError::InvalidPackageDocument)?;
@@ -131,8 +131,8 @@ fn parse_package_document<R: Read + std::io::Seek>(
                     });
                 }
             }
-            Ok(Event::Start(ref event)) if is_named(event.name(), b"contributor") => {
-                let contributor_id = attribute_value(event, reader.decoder(), b"id")?;
+            Ok(Event::Start(ref event)) if is_named(event.name(), "contributor") => {
+                let contributor_id = attribute_value(event, "id")?;
                 let text = reader
                     .read_text(event.name())
                     .map_err(|_| EpubError::InvalidPackageDocument)?;
@@ -146,44 +146,44 @@ fn parse_package_document<R: Read + std::io::Seek>(
                     });
                 }
             }
-            Ok(Event::Empty(ref event)) if is_named(event.name(), b"meta") => {
+            Ok(Event::Empty(ref event)) if is_named(event.name(), "meta") => {
                 let mut name = None;
                 let mut content = None;
                 let mut property = None;
                 let mut refines = None;
 
                 for attribute in event.attributes().flatten() {
-                    if is_named(attribute.key, b"name") {
+                    if is_named(attribute.key, "name") {
                         name = Some(
                             attribute
-                                .decode_and_unescape_value(reader.decoder())
+                                .normalized_value(XmlVersion::Implicit1_0)
                                 .map_err(|_| EpubError::InvalidPackageDocument)?
                                 .into_owned(),
                         );
                     }
 
-                    if is_named(attribute.key, b"content") {
+                    if is_named(attribute.key, "content") {
                         content = Some(
                             attribute
-                                .decode_and_unescape_value(reader.decoder())
+                                .normalized_value(XmlVersion::Implicit1_0)
                                 .map_err(|_| EpubError::InvalidPackageDocument)?
                                 .into_owned(),
                         );
                     }
 
-                    if is_named(attribute.key, b"property") {
+                    if is_named(attribute.key, "property") {
                         property = Some(
                             attribute
-                                .decode_and_unescape_value(reader.decoder())
+                                .normalized_value(XmlVersion::Implicit1_0)
                                 .map_err(|_| EpubError::InvalidPackageDocument)?
                                 .into_owned(),
                         );
                     }
 
-                    if is_named(attribute.key, b"refines") {
+                    if is_named(attribute.key, "refines") {
                         refines = Some(
                             attribute
-                                .decode_and_unescape_value(reader.decoder())
+                                .normalized_value(XmlVersion::Implicit1_0)
                                 .map_err(|_| EpubError::InvalidPackageDocument)?
                                 .into_owned(),
                         );
@@ -201,24 +201,24 @@ fn parse_package_document<R: Read + std::io::Seek>(
                     content.as_deref(),
                 );
             }
-            Ok(Event::Start(ref event)) if is_named(event.name(), b"meta") => {
+            Ok(Event::Start(ref event)) if is_named(event.name(), "meta") => {
                 let mut property = None;
                 let mut refines = None;
 
                 for attribute in event.attributes().flatten() {
-                    if is_named(attribute.key, b"property") {
+                    if is_named(attribute.key, "property") {
                         property = Some(
                             attribute
-                                .decode_and_unescape_value(reader.decoder())
+                                .normalized_value(XmlVersion::Implicit1_0)
                                 .map_err(|_| EpubError::InvalidPackageDocument)?
                                 .into_owned(),
                         );
                     }
 
-                    if is_named(attribute.key, b"refines") {
+                    if is_named(attribute.key, "refines") {
                         refines = Some(
                             attribute
-                                .decode_and_unescape_value(reader.decoder())
+                                .normalized_value(XmlVersion::Implicit1_0)
                                 .map_err(|_| EpubError::InvalidPackageDocument)?
                                 .into_owned(),
                         );
@@ -237,7 +237,7 @@ fn parse_package_document<R: Read + std::io::Seek>(
                 );
             }
             Ok(Event::Empty(ref event)) | Ok(Event::Start(ref event))
-                if is_named(event.name(), b"item") =>
+                if is_named(event.name(), "item") =>
             {
                 let mut item_id = None;
                 let mut href = None;
@@ -246,23 +246,23 @@ fn parse_package_document<R: Read + std::io::Seek>(
 
                 for attribute in event.attributes().flatten() {
                     let value = attribute
-                        .decode_and_unescape_value(reader.decoder())
+                        .normalized_value(XmlVersion::Implicit1_0)
                         .map_err(|_| EpubError::InvalidPackageDocument)?
                         .into_owned();
 
-                    if is_named(attribute.key, b"id") {
+                    if is_named(attribute.key, "id") {
                         item_id = Some(value.clone());
                     }
 
-                    if is_named(attribute.key, b"href") {
+                    if is_named(attribute.key, "href") {
                         href = Some(value.clone());
                     }
 
-                    if is_named(attribute.key, b"media-type") {
+                    if is_named(attribute.key, "media-type") {
                         media_type = Some(value.clone());
                     }
 
-                    if is_named(attribute.key, b"properties") {
+                    if is_named(attribute.key, "properties") {
                         properties = Some(value);
                     }
                 }
@@ -332,14 +332,13 @@ fn parse_package_document<R: Read + std::io::Seek>(
 
 fn attribute_value(
     event: &quick_xml::events::BytesStart<'_>,
-    decoder: quick_xml::encoding::Decoder,
-    attribute_name: &[u8],
+    attribute_name: &str,
 ) -> Result<Option<String>, EpubError> {
     for attribute in event.attributes().flatten() {
         if is_named(attribute.key, attribute_name) {
             return Ok(Some(
                 attribute
-                    .decode_and_unescape_value(decoder)
+                    .normalized_value(XmlVersion::Implicit1_0)
                     .map_err(|_| EpubError::InvalidPackageDocument)?
                     .into_owned(),
             ));
@@ -387,8 +386,8 @@ fn add_contributor_role_refinement(
     );
 }
 
-fn is_named(name: QName<'_>, local_name: &[u8]) -> bool {
-    name.as_ref().rsplit(|byte| *byte == b':').next() == Some(local_name)
+fn is_named(name: QName<'_>, local_name: &str) -> bool {
+    name.local_name().as_ref() == local_name
 }
 
 fn read_zip_entry<R: Read + std::io::Seek>(

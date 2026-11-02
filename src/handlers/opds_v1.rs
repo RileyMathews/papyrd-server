@@ -537,9 +537,9 @@ mod tests {
         assert!(
             xml.contains("type=\"application/atom+xml;profile=opds-catalog;kind=acquisition\"")
         );
-        assert!(xml.contains("href=\"/opdsv1/publications?page=2&amp;per_page=20\""));
-        assert!(xml.contains("<title>A &amp; B</title>"));
-        assert!(xml.contains("<name>Jane &lt;Doe&gt;</name>"));
+        assert!(xml.contains("href=\"/opdsv1/publications?page=2&#38;per_page=20\""));
+        assert!(xml.contains("<title>A &#38; B</title>"));
+        assert!(xml.contains("<name>Jane &#60;Doe&#62;</name>"));
         assert!(xml.contains("rel=\"http://opds-spec.org/acquisition\""));
         assert!(xml.contains("href=\"/books/11111111-1111-1111-1111-111111111111/download\""));
     }
@@ -565,8 +565,8 @@ mod tests {
         .render()
         .unwrap();
 
-        assert!(xml.contains("href=\"/opdsv1/authors/a&amp;b\""));
-        assert!(xml.contains("title=\"A &quot;Quoted&quot; Link\""));
-        assert!(xml.contains("<content type=\"text\">Books by A &amp; B.</content>"));
+        assert!(xml.contains("href=\"/opdsv1/authors/a&#38;b\""));
+        assert!(xml.contains("title=\"A &#34;Quoted&#34; Link\""));
+        assert!(xml.contains("<content type=\"text\">Books by A &#38; B.</content>"));
     }
 }
